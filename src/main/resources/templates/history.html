@@ -1,77 +1,54 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: html(title='历史记录 - 织金苗语语音识别系统', active='history', content=~{::#content})}">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>历史记录 - 织金苗语语音识别系统</title>
-    <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
 <body>
-    <nav class="navbar">
-        <div class="container">
-            <div class="nav-brand">
-                <h1>🎤 织金苗语语音识别系统</h1>
-            </div>
-            <ul class="nav-menu">
-                <li><a href="/">首页</a></li>
-                <li><a href="/recognize">语音识别</a></li>
-                <li><a href="/history" class="active">历史记录</a></li>
-                <li><a href="/statistics">统计分析</a></li>
-            </ul>
+    <div id="content">
+        <div class="page-header">
+            <h2>历史记录</h2>
+            <p>查看最近的语音识别结果</p>
         </div>
-    </nav>
 
-    <main class="main-content">
-        <div class="container">
-            <div class="page-header">
-                <h2>历史记录</h2>
-                <p>查看最近的语音识别结果</p>
-            </div>
+        <div class="refresh-section">
+            <button class="btn btn-primary" id="refreshBtn">刷新记录</button>
+        </div>
 
-            <div class="refresh-section">
-                <button class="btn btn-primary" id="refreshBtn">刷新记录</button>
-            </div>
-
-            <div class="result-section" id="historySection">
-                <div class="result-card">
-                    <table style="width: 100%; border-collapse: collapse;">
+        <div class="result-section" id="historySection">
+            <div class="result-card">
+                <div class="history-table-wrapper">
+                    <table class="history-table">
                         <thead>
                             <tr>
-                                <th style="text-align: left; padding: 12px 8px;">时间</th>
-                                <th style="text-align: left; padding: 12px 8px;">识别结果</th>
-                                <th style="text-align: left; padding: 12px 8px;">置信度</th>
-                                <th style="text-align: left; padding: 12px 8px;">距离</th>
-                                <th style="text-align: left; padding: 12px 8px;">耗时</th>
-                                <th style="text-align: left; padding: 12px 8px;">状态</th>
+                                <th>时间</th>
+                                <th>识别结果</th>
+                                <th>置信度</th>
+                                <th>距离</th>
+                                <th>耗时</th>
+                                <th>状态</th>
                             </tr>
                         </thead>
                         <tbody id="historyBody">
                             <tr>
-                                <td colspan="6" style="padding: 16px 8px;">加载中...</td>
+                                <td colspan="6" class="loading-cell">加载中...</td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
             </div>
-
-            <div class="error-section" id="errorSection" style="display: none;">
-                <div class="error-message" id="errorMessage"></div>
-            </div>
         </div>
-    </main>
 
-    <footer class="footer">
-        <div class="container">
-            <p>基于DTW模板匹配的织金苗语小词表语音识别系统 | 西南民族大学</p>
+        <div class="error-section" id="errorSection" style="display: none;">
+            <div class="error-message" id="errorMessage"></div>
         </div>
-    </footer>
+    </div>
 
     <script>
         async function loadHistory() {
             const historyBody = document.getElementById('historyBody');
             const errorSection = document.getElementById('errorSection');
             errorSection.style.display = 'none';
-            historyBody.innerHTML = '<tr><td colspan="6" style="padding: 16px 8px;">加载中...</td></tr>';
+            historyBody.innerHTML = '<tr><td colspan="6" class="loading-cell">加载中...</td></tr>';
 
             try {
                 const response = await fetch('/recognition/history');
@@ -82,22 +59,22 @@
                 }
 
                 if (!Array.isArray(data) || data.length === 0) {
-                    historyBody.innerHTML = '<tr><td colspan="6" style="padding: 16px 8px;">暂无识别记录</td></tr>';
+                    historyBody.innerHTML = '<tr><td colspan="6" class="loading-cell">暂无识别记录</td></tr>';
                     return;
                 }
 
                 historyBody.innerHTML = data.map(item => `
                     <tr>
-                        <td style="padding: 12px 8px;">${item.createdAt || '-'}</td>
-                        <td style="padding: 12px 8px;">${item.wordText || item.wordId || '未识别'}</td>
-                        <td style="padding: 12px 8px;">${item.confidence != null ? (item.confidence * 100).toFixed(1) + '%' : '-'}</td>
-                        <td style="padding: 12px 8px;">${item.distance != null ? item.distance.toFixed(4) : '-'}</td>
-                        <td style="padding: 12px 8px;">${item.processingTimeMs != null ? item.processingTimeMs + ' ms' : '-'}</td>
-                        <td style="padding: 12px 8px;">${item.rejected ? '拒识' : '已识别'}</td>
+                        <td>${item.createdAt || '-'}</td>
+                        <td><span class="result-badge">${item.wordText || item.wordId || '未识别'}</span></td>
+                        <td><span class="confidence-badge">${item.confidence != null ? (item.confidence * 100).toFixed(1) + '%' : '-'}</span></td>
+                        <td>${item.distance != null ? item.distance.toFixed(4) : '-'}</td>
+                        <td>${item.processingTimeMs != null ? item.processingTimeMs + ' ms' : '-'}</td>
+                        <td><span class="status-badge ${item.rejected ? 'rejected' : 'recognized'}">${item.rejected ? '拒识' : '已识别'}</span></td>
                     </tr>
                 `).join('');
             } catch (error) {
-                historyBody.innerHTML = '<tr><td colspan="6" style="padding: 16px 8px;">加载失败</td></tr>';
+                historyBody.innerHTML = '<tr><td colspan="6" class="loading-cell">加载失败</td></tr>';
                 document.getElementById('errorMessage').textContent = '历史记录加载失败: ' + error.message;
                 errorSection.style.display = 'block';
             }

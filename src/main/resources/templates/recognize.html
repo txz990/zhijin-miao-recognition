@@ -1,95 +1,70 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: html(title='语音识别 - 织金苗语语音识别系统', active='recognize', content=~{::#content})}">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>语音识别 - 织金苗语语音识别系统</title>
-    <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
 <body>
-    <nav class="navbar">
-        <div class="container">
-            <div class="nav-brand">
-                <h1>🎤 织金苗语语音识别系统</h1>
-            </div>
-            <ul class="nav-menu">
-                <li><a href="/">首页</a></li>
-                <li><a href="/recognize" class="active">语音识别</a></li>
-                <li><a href="/history">历史记录</a></li>
-                <li><a href="/statistics">统计分析</a></li>
-            </ul>
+    <div id="content">
+        <div class="page-header">
+            <h2>语音识别</h2>
+            <p>上传音频文件进行织金苗语识别</p>
         </div>
-    </nav>
 
-    <main class="main-content">
-        <div class="container">
-            <div class="page-header">
-                <h2>语音识别</h2>
-                <p>上传音频文件进行织金苗语识别</p>
+        <div class="upload-section">
+            <div class="upload-box" id="uploadBox">
+                <div class="upload-icon">📁</div>
+                <p>点击选择音频文件或拖拽到此处</p>
+                <p class="upload-hint">支持WAV格式（16kHz, 16bit, 单声道）</p>
+                <input type="file" id="audioFile" accept=".wav,audio/wav" hidden>
+                <button class="btn btn-primary" id="selectFileBtn">选择文件</button>
             </div>
 
-            <div class="upload-section">
-                <div class="upload-box" id="uploadBox">
-                    <div class="upload-icon">📁</div>
-                    <p>点击选择音频文件或拖拽到此处</p>
-                    <p class="upload-hint">支持WAV格式（16kHz, 16bit, 单声道）</p>
-                    <input type="file" id="audioFile" accept=".wav,audio/wav" hidden>
-                    <button class="btn btn-primary" id="selectFileBtn">选择文件</button>
+            <div class="file-info" id="fileInfo" style="display: none;">
+                <div class="file-name" id="fileName"></div>
+                <button class="btn btn-secondary" id="clearFileBtn">清除</button>
+            </div>
+
+            <button class="btn btn-large btn-primary" id="recognizeBtn" disabled>
+                开始识别
+            </button>
+        </div>
+
+        <div class="loading" id="loading" style="display: none;">
+            <div class="spinner"></div>
+            <p>正在识别中...</p>
+        </div>
+
+        <div class="result-section" id="resultSection" style="display: none;">
+            <h3>识别结果</h3>
+            <div class="result-card">
+                <div class="result-item">
+                    <span class="result-label">识别文字</span>
+                    <span class="result-value" id="resultWord"></span>
                 </div>
-
-                <div class="file-info" id="fileInfo" style="display: none;">
-                    <div class="file-name" id="fileName"></div>
-                    <button class="btn btn-secondary" id="clearFileBtn">清除</button>
+                <div class="result-item">
+                    <span class="result-label">声调</span>
+                    <span class="result-value" id="resultTone"></span>
                 </div>
-
-                <button class="btn btn-large btn-primary" id="recognizeBtn" disabled>
-                    开始识别
-                </button>
-            </div>
-
-            <div class="loading" id="loading" style="display: none;">
-                <div class="spinner"></div>
-                <p>正在识别中...</p>
-            </div>
-
-            <div class="result-section" id="resultSection" style="display: none;">
-                <h3>识别结果</h3>
-                <div class="result-card">
-                    <div class="result-item">
-                        <span class="result-label">识别文字</span>
-                        <span class="result-value" id="resultWord"></span>
-                    </div>
-                    <div class="result-item">
-                        <span class="result-label">声调</span>
-                        <span class="result-value" id="resultTone"></span>
-                    </div>
-                    <div class="result-item">
-                        <span class="result-label">置信度</span>
-                        <span class="result-value">
-                            <div class="confidence-bar">
-                                <div class="confidence-fill" id="confidenceFill"></div>
-                            </div>
-                            <span id="resultConfidence"></span>
-                        </span>
-                    </div>
-                    <div class="result-item">
-                        <span class="result-label">处理时间</span>
-                        <span class="result-value"><span id="resultTime"></span> ms</span>
-                    </div>
+                <div class="result-item">
+                    <span class="result-label">置信度</span>
+                    <span class="result-value">
+                        <div class="confidence-bar">
+                            <div class="confidence-fill" id="confidenceFill"></div>
+                        </div>
+                        <span id="resultConfidence"></span>
+                    </span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">处理时间</span>
+                    <span class="result-value"><span id="resultTime"></span> ms</span>
                 </div>
             </div>
-
-            <div class="error-section" id="errorSection" style="display: none;">
-                <div class="error-message" id="errorMessage"></div>
-            </div>
         </div>
-    </main>
 
-    <footer class="footer">
-        <div class="container">
-            <p>基于DTW模板匹配的织金苗语小词表语音识别系统 | 西南民族大学</p>
+        <div class="error-section" id="errorSection" style="display: none;">
+            <div class="error-message" id="errorMessage"></div>
         </div>
-    </footer>
+    </div>
 
     <script>
         const uploadBox = document.getElementById('uploadBox');

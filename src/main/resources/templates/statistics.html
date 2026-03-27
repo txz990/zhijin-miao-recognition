@@ -1,85 +1,60 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: html(title='统计分析 - 织金苗语语音识别系统', active='statistics', content=~{::#content})}">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>统计分析 - 织金苗语语音识别系统</title>
-    <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
 <body>
-    <nav class="navbar">
-        <div class="container">
-            <div class="nav-brand">
-                <h1>🎤 织金苗语语音识别系统</h1>
-            </div>
-            <ul class="nav-menu">
-                <li><a href="/">首页</a></li>
-                <li><a href="/recognize">语音识别</a></li>
-                <li><a href="/history">历史记录</a></li>
-                <li><a href="/statistics" class="active">统计分析</a></li>
-            </ul>
+    <div id="content">
+        <div class="page-header">
+            <h2>统计分析</h2>
+            <p>查看系统识别统计信息</p>
         </div>
-    </nav>
 
-    <main class="main-content">
-        <div class="container">
-            <div class="page-header">
-                <h2>统计分析</h2>
-                <p>查看系统识别统计信息</p>
+        <div class="stats-grid">
+            <div class="stat-card stat-card-animated">
+                <div class="stat-icon">📊</div>
+                <div class="stat-value" id="totalCount">-</div>
+                <div class="stat-label">总识别次数</div>
             </div>
-
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-icon">📊</div>
-                    <div class="stat-value" id="totalCount">-</div>
-                    <div class="stat-label">总识别次数</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon">✅</div>
-                    <div class="stat-value" id="correctCount">-</div>
-                    <div class="stat-label">正确识别数</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon">🎯</div>
-                    <div class="stat-value" id="accuracy">-</div>
-                    <div class="stat-label">准确率</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon">📈</div>
-                    <div class="stat-value" id="avgConfidence">-</div>
-                    <div class="stat-label">平均置信度</div>
-                </div>
+            <div class="stat-card stat-card-animated">
+                <div class="stat-icon">✅</div>
+                <div class="stat-value" id="correctCount">-</div>
+                <div class="stat-label">正确识别数</div>
             </div>
-
-            <div class="chart-section">
-                <h3>性能指标</h3>
-                <div class="metrics-grid">
-                    <div class="metric-item">
-                        <div class="metric-label">技术方案</div>
-                        <div class="metric-value">DTW模板匹配</div>
-                    </div>
-                    <div class="metric-item">
-                        <div class="metric-label">特征维度</div>
-                        <div class="metric-value">39维 MFCC</div>
-                    </div>
-                    <div class="metric-item">
-                        <div class="metric-label">算法优化</div>
-                        <div class="metric-value">Sakoe-Chiba带约束</div>
-                    </div>
-                </div>
+            <div class="stat-card stat-card-animated">
+                <div class="stat-icon">🎯</div>
+                <div class="stat-value" id="accuracy">-</div>
+                <div class="stat-label">准确率</div>
             </div>
-
-            <div class="refresh-section">
-                <button class="btn btn-primary" id="refreshBtn">刷新数据</button>
+            <div class="stat-card stat-card-animated">
+                <div class="stat-icon">📈</div>
+                <div class="stat-value" id="avgConfidence">-</div>
+                <div class="stat-label">平均置信度</div>
             </div>
         </div>
-    </main>
 
-    <footer class="footer">
-        <div class="container">
-            <p>基于DTW模板匹配的织金苗语小词表语音识别系统 | 西南民族大学</p>
+        <div class="chart-section">
+            <h3>性能指标</h3>
+            <div class="metrics-grid">
+                <div class="metric-item">
+                    <div class="metric-label">技术方案</div>
+                    <div class="metric-value">DTW模板匹配</div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-label">特征维度</div>
+                    <div class="metric-value">39维 MFCC</div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-label">算法优化</div>
+                    <div class="metric-value">Sakoe-Chiba带约束</div>
+                </div>
+            </div>
         </div>
-    </footer>
+
+        <div class="refresh-section">
+            <button class="btn btn-primary" id="refreshBtn">刷新数据</button>
+        </div>
+    </div>
 
     <script>
         async function loadStatistics() {
