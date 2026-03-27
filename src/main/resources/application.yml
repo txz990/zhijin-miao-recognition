@@ -1,0 +1,66 @@
+spring:
+  application:
+    name: zhijin-miao-recognition
+  datasource:
+    url: jdbc:mysql://localhost:3306/zhijin_miao?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai&characterEncoding=UTF-8&useUnicode=true
+    username: root
+    password: 123456
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQL8Dialect
+        use_sql_comments: true
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 100MB
+  thymeleaf:
+    cache: false
+    prefix: classpath:/templates/
+    suffix: .html
+
+# 日志配置
+logging:
+  level:
+    root: INFO
+    com.lunwen: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/application.log
+
+# 音频处理配置
+audio:
+  sample-rate: 16000
+  bit-depth: 16
+  channels: 1
+  temp-dir: ./temp_audio
+  upload-dir: ./uploads
+
+# 特征存储配置
+features:
+  storage-dir: ./templates
+  cache-enabled: true
+  cache-size: 1000
+
+# 识别配置
+recognition:
+  confidence-threshold: 0.6
+  rejection-threshold: 0.5
+  dtw-method: java
+
+# 服务器配置
+server:
+  port: 8080
+  compression:
+    enabled: true
+    min-response-size: 1024

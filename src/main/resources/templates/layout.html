@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${title}">织金苗语语音识别系统</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <h1>🎤 织金苗语语音识别系统</h1>
+            </div>
+            <ul class="nav-menu">
+                <li><a th:href="@{/}" th:classappend="${active == 'home' ? 'active' : ''}">首页</a></li>
+                <li><a th:href="@{/recognize}" th:classappend="${active == 'recognize' ? 'active' : ''}">语音识别</a></li>
+                <li><a th:href="@{/statistics}" th:classappend="${active == 'statistics' ? 'active' : ''}">统计分析</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <div class="container">
+            <div th:replace="~{${content}}"></div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>基于DTW模板匹配的织金苗语小词表语音识别系统 | 西南民族大学</p>
+        </div>
+    </footer>
+
+    <script th:src="@{/js/main.js}"></script>
+</body>
+</html>

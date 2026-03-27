@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>语音识别 - 织金苗语语音识别系统</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <h1>🎤 织金苗语语音识别系统</h1>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="/">首页</a></li>
+                <li><a href="/recognize" class="active">语音识别</a></li>
+                <li><a href="/history">历史记录</a></li>
+                <li><a href="/statistics">统计分析</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <div class="container">
+            <div class="page-header">
+                <h2>语音识别</h2>
+                <p>上传音频文件进行织金苗语识别</p>
+            </div>
+
+            <div class="upload-section">
+                <div class="upload-box" id="uploadBox">
+                    <div class="upload-icon">📁</div>
+                    <p>点击选择音频文件或拖拽到此处</p>
+                    <p class="upload-hint">支持WAV格式（16kHz, 16bit, 单声道）</p>
+                    <input type="file" id="audioFile" accept=".wav,audio/wav" hidden>
+                    <button class="btn btn-primary" id="selectFileBtn">选择文件</button>
+                </div>
+
+                <div class="file-info" id="fileInfo" style="display: none;">
+                    <div class="file-name" id="fileName"></div>
+                    <button class="btn btn-secondary" id="clearFileBtn">清除</button>
+                </div>
+
+                <button class="btn btn-large btn-primary" id="recognizeBtn" disabled>
+                    开始识别
+                </button>
+            </div>
+
+            <div class="loading" id="loading" style="display: none;">
+                <div class="spinner"></div>
+                <p>正在识别中...</p>
+            </div>
+
+            <div class="result-section" id="resultSection" style="display: none;">
+                <h3>识别结果</h3>
+                <div class="result-card">
+                    <div class="result-item">
+                        <span class="result-label">识别文字</span>
+                        <span class="result-value" id="resultWord"></span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">声调</span>
+                        <span class="result-value" id="resultTone"></span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">置信度</span>
+                        <span class="result-value">
+                            <div class="confidence-bar">
+                                <div class="confidence-fill" id="confidenceFill"></div>
+                            </div>
+                            <span id="resultConfidence"></span>
+                        </span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">处理时间</span>
+                        <span class="result-value"><span id="resultTime"></span> ms</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="error-section" id="errorSection" style="display: none;">
+                <div class="error-message" id="errorMessage"></div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>基于DTW模板匹配的织金苗语小词表语音识别系统 | 西南民族大学</p>
+        </div>
+    </footer>
+
+    <script>
+        const uploadBox = document.getElementById('uploadBox');
+        const audioFileInput = document.getElementById('audioFile');
+        const selectFileBtn = document.getElementById('selectFileBtn');
+        const fileInfo = document.getElementById('fileInfo');
+        const fileName = document.getElementById('fileName');
+        const clearFileBtn = document.getElementById('clearFileBtn');
+        const recognizeBtn = document.getElementById('recognizeBtn');
+        const loading = document.getElementById('loading');
+        const resultSection = document.getElementById('resultSection');
+        const errorSection = document.getElementById('errorSection');
+
+        selectFileBtn.addEventListener('click', () => audioFileInput.click());
+        
+        audioFileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                const file = e.target.files[0];
+                fileName.textContent = file.name;
+                fileInfo.style.display = 'block';
+                uploadBox.style.display = 'none';
+                recognizeBtn.disabled = false;
+            }
+        });
+
+        clearFileBtn.addEventListener('click', () => {
+            audioFileInput.value = '';
+            fileInfo.style.display = 'none';
+            uploadBox.style.display = 'block';
+            recognizeBtn.disabled = true;
+            resultSection.style.display = 'none';
+            errorSection.style.display = 'none';
+        });
+
+        uploadBox.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadBox.classList.add('dragover');
+        });
+
+        uploadBox.addEventListener('dragleave', () => {
+            uploadBox.classList.remove('dragover');
+        });
+
+        uploadBox.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadBox.classList.remove('dragover');
+            if (e.dataTransfer.files.length > 0) {
+                audioFileInput.files = e.dataTransfer.files;
+                const file = e.dataTransfer.files[0];
+                fileName.textContent = file.name;
+                fileInfo.style.display = 'block';
+                uploadBox.style.display = 'none';
+                recognizeBtn.disabled = false;
+            }
+        });
+
+        recognizeBtn.addEventListener('click', async () => {
+            if (audioFileInput.files.length === 0) return;
+
+            const formData = new FormData();
+            formData.append('audio', audioFileInput.files[0]);
+
+            loading.style.display = 'block';
+            resultSection.style.display = 'none';
+            errorSection.style.display = 'none';
+            recognizeBtn.disabled = true;
+
+            try {
+                const response = await fetch('/recognition/recognize', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+                loading.style.display = 'none';
+
+                if (response.ok && data.success) {
+                    document.getElementById('resultWord').textContent = data.wordText || data.wordId || '未识别';
+                    document.getElementById('resultTone').textContent = data.rejected ? (data.rejectionReason || '拒识') : (data.tone || '-');
+                    document.getElementById('resultConfidence').textContent = (data.confidence * 100).toFixed(1) + '%';
+                    document.getElementById('confidenceFill').style.width = (data.confidence * 100) + '%';
+                    document.getElementById('resultTime').textContent = data.processingTimeMs;
+                    resultSection.style.display = 'block';
+                } else {
+                    showError(data.error || '识别失败');
+                }
+            } catch (error) {
+                loading.style.display = 'none';
+                showError('网络错误: ' + error.message);
+            }
+
+            recognizeBtn.disabled = false;
+        });
+
+        function showError(message) {
+            document.getElementById('errorMessage').textContent = message;
+            errorSection.style.display = 'block';
+            recognizeBtn.disabled = false;
+        }
+    </script>
+</body>
+</html>
