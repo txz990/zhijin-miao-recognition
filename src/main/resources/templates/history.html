@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: html(title='历史记录 - 织金苗语语音识别系统', active='history', content=~{::#content})}">
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: html('历史记录 - 织金苗语语音识别系统', ~{::#content})}">
 <head>
     <meta charset="UTF-8">
 </head>
@@ -41,47 +41,47 @@
         <div class="error-section" id="errorSection" style="display: none;">
             <div class="error-message" id="errorMessage"></div>
         </div>
-    </div>
 
-    <script>
-        async function loadHistory() {
-            const historyBody = document.getElementById('historyBody');
-            const errorSection = document.getElementById('errorSection');
-            errorSection.style.display = 'none';
-            historyBody.innerHTML = '<tr><td colspan="6" class="loading-cell">加载中...</td></tr>';
+        <script th:inline="javascript">
+            async function loadHistory() {
+                const historyBody = document.getElementById('historyBody');
+                const errorSection = document.getElementById('errorSection');
+                errorSection.style.display = 'none';
+                historyBody.innerHTML = '<tr><td colspan="6" class="loading-cell">加载中...</td></tr>';
 
-            try {
-                const response = await fetch('/recognition/history');
-                const data = await response.json();
+                try {
+                    const response = await fetch(/*[[@{/recognition/history}]]*/ '/recognition/history');
+                    const data = await response.json();
 
-                if (!response.ok) {
-                    throw new Error(data.error || '加载失败');
+                    if (!response.ok) {
+                        throw new Error(data.error || '加载失败');
+                    }
+
+                    if (!Array.isArray(data) || data.length === 0) {
+                        historyBody.innerHTML = '<tr><td colspan="6" class="loading-cell">暂无识别记录</td></tr>';
+                        return;
+                    }
+
+                    historyBody.innerHTML = data.map(item => `
+                        <tr>
+                            <td>${item.createdAt || '-'}</td>
+                            <td><span class="result-badge">${item.wordText || item.wordId || '未识别'}</span></td>
+                            <td><span class="confidence-badge">${item.confidence != null ? (item.confidence * 100).toFixed(1) + '%' : '-'}</span></td>
+                            <td>${item.distance != null ? item.distance.toFixed(4) : '-'}</td>
+                            <td>${item.processingTimeMs != null ? item.processingTimeMs + ' ms' : '-'}</td>
+                            <td><span class="status-badge ${item.rejected ? 'rejected' : 'recognized'}">${item.rejected ? '拒识' : '已识别'}</span></td>
+                        </tr>
+                    `).join('');
+                } catch (error) {
+                    historyBody.innerHTML = '<tr><td colspan="6" class="loading-cell">加载失败</td></tr>';
+                    document.getElementById('errorMessage').textContent = '历史记录加载失败: ' + error.message;
+                    errorSection.style.display = 'block';
                 }
-
-                if (!Array.isArray(data) || data.length === 0) {
-                    historyBody.innerHTML = '<tr><td colspan="6" class="loading-cell">暂无识别记录</td></tr>';
-                    return;
-                }
-
-                historyBody.innerHTML = data.map(item => `
-                    <tr>
-                        <td>${item.createdAt || '-'}</td>
-                        <td><span class="result-badge">${item.wordText || item.wordId || '未识别'}</span></td>
-                        <td><span class="confidence-badge">${item.confidence != null ? (item.confidence * 100).toFixed(1) + '%' : '-'}</span></td>
-                        <td>${item.distance != null ? item.distance.toFixed(4) : '-'}</td>
-                        <td>${item.processingTimeMs != null ? item.processingTimeMs + ' ms' : '-'}</td>
-                        <td><span class="status-badge ${item.rejected ? 'rejected' : 'recognized'}">${item.rejected ? '拒识' : '已识别'}</span></td>
-                    </tr>
-                `).join('');
-            } catch (error) {
-                historyBody.innerHTML = '<tr><td colspan="6" class="loading-cell">加载失败</td></tr>';
-                document.getElementById('errorMessage').textContent = '历史记录加载失败: ' + error.message;
-                errorSection.style.display = 'block';
             }
-        }
 
-        document.getElementById('refreshBtn').addEventListener('click', loadHistory);
-        loadHistory();
-    </script>
+            document.getElementById('refreshBtn').addEventListener('click', loadHistory);
+            loadHistory();
+        </script>
+    </div>
 </body>
 </html>

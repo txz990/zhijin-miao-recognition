@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: html(title='织金苗语语音识别系统', active='home', content=~{::#content})}">
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: html('织金苗语语音识别系统', ~{::#content})}">
 <head>
     <meta charset="UTF-8">
 </head>
@@ -14,8 +14,8 @@
                     历史记录、基础统计与模板重建能力。
                 </p>
                 <div class="hero-buttons thesis-actions">
-                    <a href="/recognize" class="btn btn-primary">进入识别</a>
-                    <a href="/history" class="btn btn-secondary">查看记录</a>
+                    <a th:href="@{/recognize}" class="btn btn-primary">进入识别</a>
+                    <a th:href="@{/history}" class="btn btn-secondary">查看记录</a>
                 </div>
             </div>
             <aside class="thesis-summary">
@@ -70,15 +70,15 @@
             <div class="paper-panel">
                 <h3>推荐入口</h3>
                 <div class="entry-links">
-                    <a href="/recognize" class="entry-link">
+                    <a th:href="@{/recognize}" class="entry-link">
                         <span class="entry-title">语音识别</span>
                         <span class="entry-desc">上传测试音频并查看识别结果</span>
                     </a>
-                    <a href="/statistics" class="entry-link">
+                    <a th:href="@{/statistics}" class="entry-link">
                         <span class="entry-title">统计分析</span>
                         <span class="entry-desc">查看当前系统识别统计与运行概况</span>
                     </a>
-                    <a href="/history" class="entry-link">
+                    <a th:href="@{/history}" class="entry-link">
                         <span class="entry-title">历史记录</span>
                         <span class="entry-desc">回看最近识别结果与拒识情况</span>
                     </a>

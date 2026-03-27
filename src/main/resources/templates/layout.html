@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" th:fragment="html(title, content)">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,17 +13,17 @@
                 <h1>🎤 织金苗语语音识别系统</h1>
             </div>
             <ul class="nav-menu">
-                <li><a th:href="@{/}" th:classappend="${active == 'home' ? 'active' : ''}">首页</a></li>
-                <li><a th:href="@{/recognize}" th:classappend="${active == 'recognize' ? 'active' : ''}">语音识别</a></li>
-                <li><a th:href="@{/history}" th:classappend="${active == 'history' ? 'active' : ''}">历史记录</a></li>
-                <li><a th:href="@{/statistics}" th:classappend="${active == 'statistics' ? 'active' : ''}">统计分析</a></li>
+                <li><a th:href="@{/}">首页</a></li>
+                <li><a th:href="@{/recognize}">语音识别</a></li>
+                <li><a th:href="@{/history}">历史记录</a></li>
+                <li><a th:href="@{/statistics}">统计分析</a></li>
             </ul>
         </div>
     </nav>
 
     <main class="main-content">
         <div class="container">
-            <div th:replace="~{${content}}"></div>
+            <div th:replace="${content}"></div>
         </div>
     </main>
 

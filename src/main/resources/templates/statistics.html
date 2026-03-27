@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: html(title='统计分析 - 织金苗语语音识别系统', active='statistics', content=~{::#content})}">
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: html('统计分析 - 织金苗语语音识别系统', ~{::#content})}">
 <head>
     <meta charset="UTF-8">
 </head>
@@ -54,26 +54,26 @@
         <div class="refresh-section">
             <button class="btn btn-primary" id="refreshBtn">刷新数据</button>
         </div>
-    </div>
 
-    <script>
-        async function loadStatistics() {
-            try {
-                const response = await fetch('/recognition/statistics');
-                const data = await response.json();
-                
-                document.getElementById('totalCount').textContent = data.totalRecognitions || 0;
-                document.getElementById('correctCount').textContent = data.correctRecognitions || 0;
-                document.getElementById('accuracy').textContent = ((data.accuracy || 0) * 100).toFixed(1) + '%';
-                document.getElementById('avgConfidence').textContent = ((data.averageConfidence || 0) * 100).toFixed(1) + '%';
-            } catch (error) {
-                console.error('加载统计失败:', error);
+        <script th:inline="javascript">
+            async function loadStatistics() {
+                try {
+                    const response = await fetch(/*[[@{/recognition/statistics}]]*/ '/recognition/statistics');
+                    const data = await response.json();
+                    
+                    document.getElementById('totalCount').textContent = data.totalRecognitions || 0;
+                    document.getElementById('correctCount').textContent = data.correctRecognitions || 0;
+                    document.getElementById('accuracy').textContent = ((data.accuracy || 0) * 100).toFixed(1) + '%';
+                    document.getElementById('avgConfidence').textContent = ((data.averageConfidence || 0) * 100).toFixed(1) + '%';
+                } catch (error) {
+                    console.error('加载统计失败:', error);
+                }
             }
-        }
 
-        document.getElementById('refreshBtn').addEventListener('click', loadStatistics);
-        
-        loadStatistics();
-    </script>
+            document.getElementById('refreshBtn').addEventListener('click', loadStatistics);
+            
+            loadStatistics();
+        </script>
+    </div>
 </body>
 </html>
