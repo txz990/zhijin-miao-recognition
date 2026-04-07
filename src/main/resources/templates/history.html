@@ -7,68 +7,57 @@
     <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
 <body>
-    <!-- 导航栏 -->
     <nav class="navbar">
         <div class="container">
             <div class="nav-brand">
-                <h1>🎤 织金苗语语音识别系统</h1>
+                <h1>织金苗语语音识别系统</h1>
             </div>
             <ul class="nav-menu">
                 <li><a href="/">首页</a></li>
                 <li><a href="/recognize">语音识别</a></li>
+                <li><a href="/template-library">模板管理</a></li>
                 <li><a href="/history" class="active">历史记录</a></li>
                 <li><a href="/statistics">统计分析</a></li>
             </ul>
         </div>
     </nav>
 
-    <!-- 主内容 -->
     <main class="main-content">
         <div class="container">
-            <!-- 页面标题 -->
             <div class="page-header">
-                <h2>📋 历史记录</h2>
-                <p>查看最近的语音识别结果</p>
-            </div>
-
-            <!-- 刷新按钮 -->
-            <div class="refresh-section">
-                <button class="btn btn-primary" id="refreshBtn">🔄 刷新记录</button>
-            </div>
-
-            <!-- 历史记录表格 -->
-            <div class="result-section" id="historySection">
-                <div class="result-card">
-                    <div class="history-table-wrapper">
-                        <table class="history-table">
-                            <thead>
-                                <tr>
-                                    <th>时间</th>
-                                    <th>识别结果</th>
-                                    <th>置信度</th>
-                                    <th>距离</th>
-                                    <th>耗时</th>
-                                    <th>状态</th>
-                                </tr>
-                            </thead>
-                            <tbody id="historyBody">
-                                <tr>
-                                    <td colspan="6" class="loading-cell">加载中...</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
+                <div>
+                    <h2>历史记录</h2>
+                    <p>最近 100 条记录。</p>
                 </div>
+                <button class="btn btn-primary" id="refreshBtn">刷新</button>
             </div>
 
-            <!-- 错误提示 -->
+            <section class="history-shell">
+                <table class="history-table">
+                    <thead>
+                        <tr>
+                            <th>时间</th>
+                            <th>结果</th>
+                            <th>置信度</th>
+                            <th>距离</th>
+                            <th>耗时</th>
+                            <th>状态</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyBody">
+                        <tr>
+                            <td colspan="6" class="loading-cell">加载中...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
             <div class="error-section" id="errorSection" style="display: none;">
                 <div class="error-message" id="errorMessage"></div>
             </div>
         </div>
     </main>
 
-    <!-- 页脚 -->
     <footer class="footer">
         <div class="container">
             <p>基于DTW模板匹配的织金苗语小词表语音识别系统 | 西南民族大学</p>
@@ -91,7 +80,7 @@
                 }
 
                 if (!Array.isArray(data) || data.length === 0) {
-                    historyBody.innerHTML = '<tr><td colspan="6" class="loading-cell">暂无识别记录</td></tr>';
+                    historyBody.innerHTML = '<tr><td colspan="6" class="loading-cell">暂无记录</td></tr>';
                     return;
                 }
 
@@ -102,7 +91,7 @@
                         <td><span class="confidence-badge">${item.confidence != null ? (item.confidence * 100).toFixed(1) + '%' : '-'}</span></td>
                         <td>${item.distance != null ? item.distance.toFixed(4) : '-'}</td>
                         <td>${item.processingTimeMs != null ? item.processingTimeMs + ' ms' : '-'}</td>
-                        <td><span class="status-badge ${item.rejected ? 'rejected' : 'recognized'}">${item.rejected ? '❌ 拒识' : '✅ 已识别'}</span></td>
+                        <td><span class="status-badge ${item.rejected ? 'rejected' : 'recognized'}">${item.rejected ? '拒识' : '已识别'}</span></td>
                     </tr>
                 `).join('');
             } catch (error) {
@@ -115,7 +104,5 @@
         document.getElementById('refreshBtn').addEventListener('click', loadHistory);
         loadHistory();
     </script>
-
-    <script th:src="@{/js/main.js}"></script>
 </body>
 </html>

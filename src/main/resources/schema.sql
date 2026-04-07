@@ -143,7 +143,7 @@ CREATE TABLE statistics (
     INDEX idx_calculated (calculated_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- 插入初始发音人数据（演示用）
+-- 插入初始发音人数据
 INSERT INTO speakers (speaker_id, name, age, gender, dialect_background, phonetic_quality) VALUES
 ('S1', '发音人1', 40, 'M', '贵州毕节', '优秀'),
 ('S2', '发音人2', 35, 'F', '贵州毕节', '优秀'),
@@ -151,7 +151,7 @@ INSERT INTO speakers (speaker_id, name, age, gender, dialect_background, phoneti
 ('S4', '发音人4', 38, 'F', '贵州毕节', '优秀'),
 ('S5', '发音人5', 42, 'M', '贵州毕节', '优秀');
 
--- 插入初始词汇数据（演示用）
+-- 插入初始词汇数据
 -- 当前仓库默认仅提供少量示例词条，便于快速启动和验证流程。
 -- 论文中的完整实验词表与语音样本需由使用者自行导入。
 INSERT INTO vocabulary (word_id, word_text, pinyin, tone, category) VALUES

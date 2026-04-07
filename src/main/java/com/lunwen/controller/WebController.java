@@ -25,4 +25,9 @@ public class WebController {
     public String history() {
         return "history";
     }
+
+    @GetMapping("/template-library")
+    public String templateLibrary() {
+        return "template-library";
+    }
 }

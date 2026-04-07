@@ -7,113 +7,40 @@
     <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
 <body>
-    <!-- 导航栏 -->
     <nav class="navbar">
         <div class="container">
             <div class="nav-brand">
-                <h1>🎤 织金苗语语音识别系统</h1>
+                <h1>织金苗语语音识别系统</h1>
             </div>
             <ul class="nav-menu">
                 <li><a href="/" class="active">首页</a></li>
                 <li><a href="/recognize">语音识别</a></li>
+                <li><a href="/template-library">模板管理</a></li>
                 <li><a href="/history">历史记录</a></li>
                 <li><a href="/statistics">统计分析</a></li>
             </ul>
         </div>
     </nav>
 
-    <!-- 主内容 -->
     <main class="main-content">
         <div class="container">
-            <!-- 英雄区域 -->
-            <section class="thesis-hero">
-                <div class="thesis-hero-main">
-                    <div class="thesis-kicker">🚀 毕业设计系统</div>
-                    <h2>基于DTW模板匹配的织金苗语小词表语音识别系统</h2>
-                    <p>本系统用于织金苗语小词表语音识别实验与演示，当前版本提供音频识别、历史记录、基础统计与模板重建能力。采用先进的语音处理技术，为少数民族语言研究提供有力支撑。</p>
-                    <div class="thesis-actions">
-                        <a href="/recognize" class="btn btn-primary">🎙️ 进入识别</a>
-                        <a href="/history" class="btn btn-secondary">📋 查看记录</a>
-                    </div>
-                </div>
-                <aside class="thesis-summary">
-                    <div class="summary-item">
-                        <span class="summary-label">💻 技术路线</span>
-                        <span class="summary-value">VAD + MFCC + DTW</span>
-                    </div>
-                    <div class="summary-item">
-                        <span class="summary-label">🔧 运行环境</span>
-                        <span class="summary-value">Java 11 / Spring Boot</span>
-                    </div>
-                    <div class="summary-item">
-                        <span class="summary-label">🎯 系统定位</span>
-                        <span class="summary-value">论文配套实验系统</span>
-                    </div>
-                    <div class="summary-item">
-                        <span class="summary-label">📊 初始数据</span>
-                        <span class="summary-value">演示级初始化数据</span>
-                    </div>
-                </aside>
-            </section>
-
-            <!-- 功能卡片网格 -->
-            <section class="paper-grid">
-                <div class="paper-panel">
-                    <h3>系统用途</h3>
-                    <ul class="paper-list">
-                        <li>用于小词表苗语语音识别流程演示与基础验证</li>
-                        <li>用于论文答辩阶段展示识别、记录与模板管理能力</li>
-                        <li>用于后续补充实验脚本与完整语料后的扩展研究</li>
-                    </ul>
-                </div>
-
-                <div class="paper-panel">
-                    <h3>当前模块</h3>
-                    <ul class="paper-list">
-                        <li>语音识别：上传 WAV 音频并返回识别结果或拒识结果</li>
-                        <li>历史记录：查看最近识别结果、距离、置信度与处理耗时</li>
-                        <li>统计分析：查看识别次数、平均置信度与基础统计</li>
-                        <li>模板管理：支持按样本或按词条重建模板</li>
-                    </ul>
-                </div>
-
-                <div class="paper-panel">
-                    <h3>使用约束</h3>
-                    <ul class="paper-list">
-                        <li>输入音频应为 WAV 格式，建议 16kHz、16bit、单声道</li>
-                        <li>当前仓库默认不内置论文完整实验语料与评测结果</li>
-                        <li>论文中的完整实验规模与指标需在单独导入语料后复现</li>
-                    </ul>
-                </div>
-
-                <div class="paper-panel">
-                    <h3>推荐入口</h3>
-                    <div class="entry-links">
-                        <a href="/recognize" class="entry-link">
-                            <span class="entry-title">🎙️ 语音识别</span>
-                            <span class="entry-desc">上传测试音频并查看识别结果</span>
-                        </a>
-                        <a href="/statistics" class="entry-link">
-                            <span class="entry-title">📊 统计分析</span>
-                            <span class="entry-desc">查看当前系统识别统计与运行概况</span>
-                        </a>
-                        <a href="/history" class="entry-link">
-                            <span class="entry-title">📋 历史记录</span>
-                            <span class="entry-desc">回看最近识别结果与拒识情况</span>
-                        </a>
+            <section class="hero-shell">
+                <div class="hero-main">
+                    <h2 class="hero-title">基于 DTW 模板匹配的织金苗语小词表语音识别系统</h2>
+                    <p class="hero-text">织金苗语小词表识别实验平台</p>
+                    <div class="hero-actions">
+                        <a href="/recognize" class="btn btn-primary">进入识别</a>
+                        <a href="/template-library" class="btn btn-secondary">管理模板</a>
                     </div>
                 </div>
             </section>
         </div>
     </main>
 
-    <!-- 页脚 -->
     <footer class="footer">
         <div class="container">
             <p>基于DTW模板匹配的织金苗语小词表语音识别系统 | 西南民族大学</p>
         </div>
     </footer>
-
-    <script th:src="@{/js/main.js}"></script>
 </body>
 </html>

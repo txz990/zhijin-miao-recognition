@@ -152,11 +152,14 @@ public class MFCCFeatureExtractionService {
             return signal;
         }
 
+        // 基于整段语音统计到的最大短时能量和最大过零率生成相对阈值，
+        // 用于区分有效语音帧与首尾静音帧。
         float energyThreshold = maxEnergy * ENERGY_THRESHOLD_RATIO;
         float zcrThreshold = maxZcr * ZCR_THRESHOLD_RATIO;
 
         int startFrame = -1;
         int endFrame = -1;
+        // 从前往后找到第一个满足语音条件的帧，作为语音起点。
         for (int i = 0; i < numFrames; i++) {
             if (isSpeechFrame(energies[i], zcrs[i], energyThreshold, zcrThreshold)) {
                 startFrame = i;
@@ -164,6 +167,7 @@ public class MFCCFeatureExtractionService {
             }
         }
 
+        // 从后往前找到最后一个满足语音条件的帧，作为语音终点。
         for (int i = numFrames - 1; i >= 0; i--) {
             if (isSpeechFrame(energies[i], zcrs[i], energyThreshold, zcrThreshold)) {
                 endFrame = i;
