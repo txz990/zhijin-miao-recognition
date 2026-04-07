@@ -1,6 +1,8 @@
 package com.lunwen.entity;
 
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+
 import javax.persistence.*;
 import java.time.LocalDateTime;
 
@@ -63,6 +65,7 @@ public class RecognitionResult {
     private Float rtf;
 
     @Column(name = "is_rejected")
+    @Builder.Default
     private Boolean isRejected = false;
 
     @Column(name = "rejection_reason", length = 255)
@@ -71,6 +74,8 @@ public class RecognitionResult {
     @Column(name = "manual_verification", length = 100)
     private String manualVerification;
 
+    @CreationTimestamp
+    @Builder.Default
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 

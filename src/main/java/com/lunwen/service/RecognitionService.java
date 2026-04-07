@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -40,6 +41,9 @@ public class RecognitionService {
 
     @Autowired
     private RecognitionResultRepository resultRepository;
+
+    @Autowired
+    private UserRepository userRepository;
 
     /**
      * 执行语音识别
@@ -92,12 +96,19 @@ public class RecognitionService {
             // 5. 计算置信度
             float confidence = calculateConfidence(distances);
             RejectionDecision rejectionDecision = evaluateRejection(topDistance, confidence);
-            log.info("匹配结果: {}, 距离: {:.3f}, 置信度: {:.2f}, 拒识: {}",
-                topTemplate.getVocabulary().getWordText(), topDistance, confidence, rejectionDecision.rejected);
+            log.info("匹配结果: {}, 距离: {}, 置信度: {}, 拒识: {}",
+                topTemplate.getVocabulary().getWordText(),
+                String.format("%.3f", topDistance),
+                String.format("%.2f", confidence),
+                rejectionDecision.rejected);
 
             // 6. 存储识别结果
             long processingTime = System.currentTimeMillis() - startTime;
+            User currentUser = request.getUserId() == null
+                ? null
+                : userRepository.findById(request.getUserId()).orElse(null);
             RecognitionResult result = RecognitionResult.builder()
+                .user(currentUser)
                 .audioFilePath(request.getAudioFilePath())
                 .top1Template(topTemplate)
                 .top1Word(topTemplate.getVocabulary())
@@ -106,6 +117,7 @@ public class RecognitionService {
                 .isRejected(rejectionDecision.rejected)
                 .rejectionReason(rejectionDecision.reason)
                 .processingTimeMs((int) processingTime)
+                .createdAt(LocalDateTime.now())
                 .build();
 
             resultRepository.save(result);
@@ -207,16 +219,18 @@ public class RecognitionService {
     /**
      * 获取识别统计信息
      */
+    @Transactional
     public Map<String, Object> getStatistics() {
+        resultRepository.backfillMissingCreatedAt();
         Long totalCount = resultRepository.countTotalRecognitions();
-        Long correctCount = resultRepository.countCorrectRecognitions(0.8f);
-        Double avgConfidence = resultRepository.getAverageAccuracy();
+        Long recognizedCount = resultRepository.countRecognizedResults();
+        Double avgConfidence = resultRepository.getAverageConfidence();
 
         return Map.of(
             "totalRecognitions", totalCount != null ? totalCount : 0L,
-            "correctRecognitions", correctCount != null ? correctCount : 0L,
+            "recognizedCount", recognizedCount != null ? recognizedCount : 0L,
             "accuracy", totalCount != null && totalCount > 0 ?
-                (correctCount != null ? correctCount : 0) / (double) totalCount : 0.0,
+                (recognizedCount != null ? recognizedCount : 0) / (double) totalCount : 0.0,
             "averageConfidence", avgConfidence != null ? avgConfidence : 0.0
         );
     }
@@ -224,8 +238,9 @@ public class RecognitionService {
     /**
      * 获取最近识别历史
      */
-    @Transactional(readOnly = true)
+    @Transactional
     public List<RecognitionHistoryItem> getRecognitionHistory() {
+        resultRepository.backfillMissingCreatedAt();
         return resultRepository.findTop100ByOrderByCreatedAtDesc().stream()
             .map(this::toHistoryItem)
             .collect(Collectors.toList());

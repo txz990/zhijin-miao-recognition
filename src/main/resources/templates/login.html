@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登录 - 织金苗语语音识别系统</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <main class="login-page">
+        <section class="login-shell">
+            <div class="login-brand">织金苗语语音识别系统</div>
+            <h1 class="login-title">系统登录</h1>
+            <p class="login-subtitle">登录后可使用识别、历史记录、统计分析与管理功能。</p>
+
+            <div class="error-section" th:if="${error}">
+                <div class="error-message" th:text="${error}"></div>
+            </div>
+
+            <form class="login-form" th:action="@{/auth/login}" method="post">
+                <input type="hidden" name="redirect" th:value="${redirect}">
+
+                <div class="field-group">
+                    <label class="field-label" for="username">用户名</label>
+                    <input class="field-input" id="username" name="username" type="text" autocomplete="username" required>
+                </div>
+
+                <div class="field-group">
+                    <label class="field-label" for="password">密码</label>
+                    <input class="field-input" id="password" name="password" type="password" autocomplete="current-password" required>
+                </div>
+
+                <button class="btn btn-primary btn-large" type="submit">登录</button>
+            </form>
+
+            <div class="login-links">
+                <a href="/register">注册账号</a>
+            </div>
+        </section>
+    </main>
+    <script>
+        if (window.location.search.includes('error=')) {
+            history.replaceState({}, document.title, window.location.pathname);
+        }
+    </script>
+</body>
+</html>

@@ -2,8 +2,10 @@ package com.lunwen.repository;
 
 import com.lunwen.entity.RecognitionResult;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -45,7 +47,24 @@ public interface RecognitionResultRepository extends JpaRepository<RecognitionRe
     /**
      * 统计总识别数
      */
-    @Query("SELECT COUNT(r) FROM RecognitionResult r WHERE r.isRejected = false")
+    @Query("SELECT COUNT(r) FROM RecognitionResult r")
     Long countTotalRecognitions();
+
+    /**
+     * 统计已识别数
+     */
+    @Query("SELECT COUNT(r) FROM RecognitionResult r WHERE r.isRejected = false")
+    Long countRecognizedResults();
+
+    /**
+     * 统计平均置信度
+     */
+    @Query("SELECT AVG(r.top1Confidence) FROM RecognitionResult r")
+    Double getAverageConfidence();
+
+    @Modifying
+    @Transactional
+    @Query("UPDATE RecognitionResult r SET r.createdAt = CURRENT_TIMESTAMP WHERE r.createdAt IS NULL")
+    int backfillMissingCreatedAt();
 
 }

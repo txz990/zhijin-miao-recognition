@@ -12,13 +12,27 @@
             <div class="nav-brand">
                 <h1>织金苗语语音识别系统</h1>
             </div>
-            <ul class="nav-menu">
-                <li><a href="/" class="active">首页</a></li>
-                <li><a href="/recognize">语音识别</a></li>
-                <li><a href="/template-library">模板管理</a></li>
-                <li><a href="/history">历史记录</a></li>
-                <li><a href="/statistics">统计分析</a></li>
-            </ul>
+            <div class="nav-side">
+                <ul class="nav-menu">
+                    <li><a href="/" class="active">首页</a></li>
+                    <li><a href="/recognize">语音识别</a></li>
+                    <li th:if="${isAdmin}"><a href="/template-library">模板管理</a></li>
+                    <li><a href="/history">历史记录</a></li>
+                    <li><a href="/statistics">统计分析</a></li>
+                </ul>
+                <div class="nav-user-menu" th:if="${currentUser != null}">
+                    <button class="nav-user-trigger" type="button">
+                        <span class="user-pill">
+                            <span th:text="${currentUser.username}">admin</span>
+                            <span th:if="${isAdmin}">管理员</span>
+                        </span>
+                    </button>
+                    <div class="nav-dropdown">
+                        <a class="nav-dropdown-link" href="/profile">个人信息</a>
+                        <a class="nav-dropdown-link" href="/auth/logout">退出</a>
+                    </div>
+                </div>
+            </div>
         </div>
     </nav>
 
@@ -30,7 +44,7 @@
                     <p class="hero-text">织金苗语小词表识别实验平台</p>
                     <div class="hero-actions">
                         <a href="/recognize" class="btn btn-primary">进入识别</a>
-                        <a href="/template-library" class="btn btn-secondary">管理模板</a>
+                        <a th:if="${isAdmin}" href="/template-library" class="btn btn-secondary">管理模板</a>
                     </div>
                 </div>
             </section>

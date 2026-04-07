@@ -12,13 +12,27 @@
             <div class="nav-brand">
                 <h1>织金苗语语音识别系统</h1>
             </div>
-            <ul class="nav-menu">
-                <li><a href="/">首页</a></li>
-                <li><a href="/recognize">语音识别</a></li>
-                <li><a href="/template-library">模板管理</a></li>
-                <li><a href="/history">历史记录</a></li>
-                <li><a href="/statistics" class="active">统计分析</a></li>
-            </ul>
+            <div class="nav-side">
+                <ul class="nav-menu">
+                    <li><a href="/">首页</a></li>
+                    <li><a href="/recognize">语音识别</a></li>
+                    <li th:if="${isAdmin}"><a href="/template-library">模板管理</a></li>
+                    <li><a href="/history">历史记录</a></li>
+                    <li><a href="/statistics" class="active">统计分析</a></li>
+                </ul>
+                <div class="nav-user-menu">
+                    <button class="nav-user-trigger" type="button">
+                        <span class="user-pill">
+                            <span th:text="${currentUser.username}">user</span>
+                            <span th:if="${isAdmin}">管理员</span>
+                        </span>
+                    </button>
+                    <div class="nav-dropdown">
+                        <a class="nav-dropdown-link" href="/profile">个人信息</a>
+                        <a class="nav-dropdown-link" href="/auth/logout">退出</a>
+                    </div>
+                </div>
+            </div>
         </div>
     </nav>
 
@@ -27,7 +41,7 @@
             <div class="page-header">
                 <div>
                     <h2>统计分析</h2>
-                    <p>当前库内识别统计。</p>
+                    <p>查看当前识别结果的基础统计信息。</p>
                 </div>
                 <button class="btn btn-primary" id="refreshBtn">刷新</button>
             </div>
@@ -38,11 +52,11 @@
                     <div class="stat-value" id="totalCount">-</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-label">高置信识别数</div>
+                    <div class="stat-label">成功识别数</div>
                     <div class="stat-value" id="correctCount">-</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-label">准确率</div>
+                    <div class="stat-label">识别率</div>
                     <div class="stat-value" id="accuracy">-</div>
                 </div>
                 <div class="stat-card">
@@ -60,25 +74,17 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <td>识别方法</td>
-                            <td>DTW 模板匹配</td>
-                        </tr>
-                        <tr>
-                            <td>特征</td>
-                            <td>39 维 MFCC</td>
-                        </tr>
-                        <tr>
-                            <td>端点检测</td>
-                            <td>VAD</td>
-                        </tr>
-                        <tr>
-                            <td>模板管理</td>
-                            <td>基础重建接口</td>
-                        </tr>
+                        <tr><td>识别方法</td><td>DTW 模板匹配</td></tr>
+                        <tr><td>特征</td><td>39 维 MFCC</td></tr>
+                        <tr><td>预处理</td><td>VAD</td></tr>
+                        <tr><td>模板维护</td><td th:text="${isAdmin} ? '管理员可维护' : '当前账号无管理权限'">管理员可维护</td></tr>
                     </tbody>
                 </table>
             </section>
+
+            <div class="error-section" id="errorSection" style="display: none;">
+                <div class="error-message" id="errorMessage"></div>
+            </div>
         </div>
     </main>
 
@@ -90,16 +96,25 @@
 
     <script>
         async function loadStatistics() {
+            const errorSection = document.getElementById('errorSection');
+            const errorMessage = document.getElementById('errorMessage');
+            errorSection.style.display = 'none';
+
             try {
                 const response = await fetch('/recognition/statistics');
                 const data = await response.json();
 
-                document.getElementById('totalCount').textContent = data.totalRecognitions || 0;
-                document.getElementById('correctCount').textContent = data.correctRecognitions || 0;
+                if (!response.ok) {
+                    throw new Error(data.error || '获取统计失败');
+                }
+
+                document.getElementById('totalCount').textContent = data.totalRecognitions ?? 0;
+                document.getElementById('correctCount').textContent = data.recognizedCount ?? 0;
                 document.getElementById('accuracy').textContent = ((data.accuracy || 0) * 100).toFixed(1) + '%';
                 document.getElementById('avgConfidence').textContent = ((data.averageConfidence || 0) * 100).toFixed(1) + '%';
             } catch (error) {
-                console.error('加载统计失败:', error);
+                errorMessage.textContent = error.message;
+                errorSection.style.display = 'block';
             }
         }
 

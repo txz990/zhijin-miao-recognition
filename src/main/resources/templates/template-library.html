@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>模板管理 - 织金苗语语音识别系统</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <h1>织金苗语语音识别系统</h1>
+            </div>
+            <div class="nav-side">
+                <ul class="nav-menu">
+                    <li><a href="/">首页</a></li>
+                    <li><a href="/recognize">语音识别</a></li>
+                    <li><a href="/template-library" class="active">模板管理</a></li>
+                    <li><a href="/history">历史记录</a></li>
+                    <li><a href="/statistics">统计分析</a></li>
+                </ul>
+                <div class="nav-user-menu">
+                    <button class="nav-user-trigger" type="button">
+                        <span class="user-pill">
+                            <span th:text="${currentUser.username}">admin</span>
+                            <span>管理员</span>
+                        </span>
+                    </button>
+                    <div class="nav-dropdown">
+                        <a class="nav-dropdown-link" href="/profile">个人信息</a>
+                        <a class="nav-dropdown-link" href="/auth/logout">退出</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <div class="container">
+            <div class="page-header">
+                <div>
+                    <h2>模板管理</h2>
+                    <p>支持批量建库、模板查看与基础维护。</p>
+                </div>
+            </div>
+
+            <div class="management-grid">
+                <div class="management-actions">
+                    <section class="form-card panel">
+                        <h3>快速建库</h3>
+                        <p>支持一键批量建模板。</p>
+                        <div class="stack-actions quick-template-actions">
+                            <button class="btn btn-primary" id="rebuildAllBtn">重建全部模板</button>
+                            <button class="btn btn-secondary" id="rebuildMissingBtn">仅补齐缺失模板</button>
+                        </div>
+                    </section>
+
+                    <section class="form-card panel">
+                        <h3>按样本重建</h3>
+                        <p>支持输入数据库编号或样本编号。</p>
+                        <div class="field-group">
+                            <label class="field-label" for="sampleIdInput">样本编号</label>
+                            <input class="field-input" id="sampleIdInput" type="text" placeholder="例如 1 或 S201">
+                        </div>
+                        <div class="stack-actions">
+                            <button class="btn btn-primary" id="rebuildSampleBtn">执行</button>
+                        </div>
+                    </section>
+
+                    <section class="form-card panel">
+                        <h3>按词条批量重建</h3>
+                        <p>支持输入数据库编号或词条编号。</p>
+                        <div class="field-group">
+                            <label class="field-label" for="vocabularyIdInput">词条编号</label>
+                            <input class="field-input" id="vocabularyIdInput" type="text" placeholder="例如 158 或 HM0158">
+                        </div>
+                        <div class="stack-actions">
+                            <button class="btn btn-primary" id="rebuildVocabularyBtn">执行</button>
+                        </div>
+                    </section>
+
+                    <div class="error-section" id="errorSection" style="display: none;">
+                        <div class="error-message" id="errorMessage"></div>
+                    </div>
+                </div>
+
+                <div>
+                    <section class="template-summary">
+                        <div class="stat-card">
+                            <div class="stat-label">模板数</div>
+                            <div class="stat-value" id="templateCount">-</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">样本数</div>
+                            <div class="stat-value" id="audioSampleCount">-</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">词条数</div>
+                            <div class="stat-value" id="vocabularyCount">-</div>
+                        </div>
+                    </section>
+
+                    <section class="progress-panel panel" id="progressSection" style="display: none;">
+                        <div class="progress-head">
+                            <span id="progressTitle">批量建库进行中</span>
+                            <strong id="progressPercent">0%</strong>
+                        </div>
+                        <div class="task-progress-bar">
+                            <div class="task-progress-fill" id="taskProgressFill"></div>
+                        </div>
+                        <div class="progress-meta" id="progressMeta">已处理 0 / 0</div>
+                    </section>
+
+                    <section class="template-log panel">
+                        <div class="log-head">
+                            <span class="log-title">操作记录</span>
+                            <button class="btn btn-secondary" id="clearLogsBtn">清空记录</button>
+                        </div>
+                        <div class="log-body" id="templateLogBody">
+                            <p class="empty-note">暂无操作记录。</p>
+                        </div>
+                    </section>
+
+                    <section class="template-log panel template-table-panel">
+                        <div class="log-head">
+                            <span class="log-title">模板列表</span>
+                            <div class="stack-actions inline-actions">
+                                <button class="btn btn-secondary" id="deleteSelectedBtn">删除选中</button>
+                                <button class="btn btn-secondary" id="refreshTemplateStatsBtn">刷新统计</button>
+                                <button class="btn btn-secondary" id="refreshTemplateListBtn">刷新列表</button>
+                            </div>
+                        </div>
+                        <div class="template-table-wrap">
+                            <table class="template-table">
+                                <thead>
+                                    <tr>
+                                        <th><input type="checkbox" id="selectAllTemplates"></th>
+                                        <th>模板编号</th>
+                                        <th>词条</th>
+                                        <th>苗语</th>
+                                        <th>样本</th>
+                                        <th>帧数</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="templateTableBody">
+                                    <tr>
+                                        <td colspan="7" class="empty-cell">暂无模板数据。</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>基于DTW模板匹配的织金苗语小词表语音识别系统 | 西南民族大学</p>
+        </div>
+    </footer>
+
+    <script>
+        const LOG_STORAGE_KEY = 'template_management_logs';
+        const templateCount = document.getElementById('templateCount');
+        const audioSampleCount = document.getElementById('audioSampleCount');
+        const vocabularyCount = document.getElementById('vocabularyCount');
+        const templateLogBody = document.getElementById('templateLogBody');
+        const templateTableBody = document.getElementById('templateTableBody');
+        const errorSection = document.getElementById('errorSection');
+        const errorMessage = document.getElementById('errorMessage');
+        const progressSection = document.getElementById('progressSection');
+        const progressTitle = document.getElementById('progressTitle');
+        const progressPercent = document.getElementById('progressPercent');
+        const taskProgressFill = document.getElementById('taskProgressFill');
+        const progressMeta = document.getElementById('progressMeta');
+        const selectAllTemplates = document.getElementById('selectAllTemplates');
+        const sampleIdInput = document.getElementById('sampleIdInput');
+        const vocabularyIdInput = document.getElementById('vocabularyIdInput');
+        let currentTaskTimer = null;
+
+        function hideFeedback() {
+            errorSection.style.display = 'none';
+            sampleIdInput.classList.remove('field-input-error');
+            vocabularyIdInput.classList.remove('field-input-error');
+        }
+
+        function showProgress(title, percent, meta) {
+            progressTitle.textContent = title;
+            progressPercent.textContent = `${percent}%`;
+            taskProgressFill.style.width = `${percent}%`;
+            progressMeta.textContent = meta;
+            progressSection.style.display = 'block';
+        }
+
+        function hideProgress() {
+            progressSection.style.display = 'none';
+        }
+
+        function showError(message, field) {
+            sampleIdInput.classList.remove('field-input-error');
+            vocabularyIdInput.classList.remove('field-input-error');
+            if (field) {
+                field.classList.add('field-input-error');
+                field.focus();
+            }
+
+            errorMessage.textContent = `错误：${message}`;
+            errorSection.style.display = 'block';
+            errorSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        function readLogs() {
+            try {
+                return JSON.parse(localStorage.getItem(LOG_STORAGE_KEY) || '[]');
+            } catch (error) {
+                return [];
+            }
+        }
+
+        function saveLogs(logs) {
+            localStorage.setItem(LOG_STORAGE_KEY, JSON.stringify(logs.slice(0, 50)));
+        }
+
+        function renderLogs() {
+            const logs = readLogs();
+            if (!logs.length) {
+                templateLogBody.innerHTML = '<p class="empty-note">暂无操作记录。</p>';
+                return;
+            }
+
+            templateLogBody.innerHTML = logs.map((log) => `
+                <div class="log-item">
+                    <div class="log-main">${log.title}</div>
+                    <div class="log-meta">${log.meta}</div>
+                    <div class="log-time">${log.time}</div>
+                </div>
+            `).join('');
+        }
+
+        function appendLog(title, meta) {
+            const logs = readLogs();
+            logs.unshift({
+                title,
+                meta,
+                time: new Date().toLocaleString('zh-CN')
+            });
+            saveLogs(logs);
+            renderLogs();
+        }
+
+        async function loadTemplateStatistics() {
+            try {
+                const response = await fetch('/templates/statistics');
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || '获取模板统计失败');
+                }
+
+                templateCount.textContent = data.templateCount ?? 0;
+                audioSampleCount.textContent = data.audioSampleCount ?? 0;
+                vocabularyCount.textContent = data.vocabularyCount ?? 0;
+            } catch (error) {
+                showError(error.message);
+            }
+        }
+
+        async function loadTemplateList() {
+            try {
+                const response = await fetch('/templates/list');
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || '获取模板列表失败');
+                }
+
+                if (!data.length) {
+                    templateTableBody.innerHTML = '<tr><td colspan="7" class="empty-cell">暂无模板数据。</td></tr>';
+                    selectAllTemplates.checked = false;
+                    return;
+                }
+
+                templateTableBody.innerHTML = data.map((item) => `
+                    <tr>
+                        <td><input type="checkbox" class="template-select" value="${item.id}"></td>
+                        <td>${item.templateId || '-'}</td>
+                        <td>${item.wordText || '-'}</td>
+                        <td>${item.pinyin || '-'}</td>
+                        <td>${item.sampleId || '-'}</td>
+                        <td>${item.numFrames || '-'}</td>
+                        <td>
+                            <div class="table-actions">
+                                <button class="btn btn-secondary table-btn" data-action="rebuild-sample" data-sample-id="${item.sampleDbId || ''}">重建</button>
+                                <button class="btn btn-secondary table-btn table-btn-danger" data-action="delete-template" data-template-id="${item.id}">删除</button>
+                            </div>
+                        </td>
+                    </tr>
+                `).join('');
+                selectAllTemplates.checked = false;
+            } catch (error) {
+                showError(error.message);
+            }
+        }
+
+        async function rebuildBySample(sampleIdValue) {
+            hideFeedback();
+            const sampleId = (sampleIdValue ?? document.getElementById('sampleIdInput').value).toString().trim();
+            if (!sampleId) {
+                showError('请输入样本编号', sampleIdInput);
+                return;
+            }
+
+            try {
+                const isNumericId = /^\d+$/.test(sampleId);
+                const endpoint = isNumericId
+                    ? `/templates/rebuild/sample/${sampleId}`
+                    : `/templates/rebuild/sample/code/${encodeURIComponent(sampleId)}`;
+                const response = await fetch(endpoint, { method: 'POST' });
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || '按样本重建失败');
+                }
+
+                appendLog(`样本 ${sampleId} 重建完成`, `模板编号：${data.templateId || '-'}，帧数：${data.numFrames || '-'}`);
+                loadTemplateStatistics();
+                loadTemplateList();
+            } catch (error) {
+                showError(error.message);
+            }
+        }
+
+        async function rebuildByVocabulary() {
+            hideFeedback();
+            const vocabularyId = document.getElementById('vocabularyIdInput').value.trim();
+            if (!vocabularyId) {
+                showError('请输入词条编号', vocabularyIdInput);
+                return;
+            }
+
+            try {
+                const isNumericId = /^\d+$/.test(vocabularyId);
+                const endpoint = isNumericId
+                    ? `/templates/rebuild/vocabulary/${vocabularyId}`
+                    : `/templates/rebuild/vocabulary/code/${encodeURIComponent(vocabularyId)}`;
+                const response = await fetch(endpoint, { method: 'POST' });
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || '批量重建失败');
+                }
+
+                appendLog(`词条 ${vocabularyId} 批量重建完成`, `模板数量：${data.templateCount || 0}`);
+                loadTemplateStatistics();
+                loadTemplateList();
+            } catch (error) {
+                showError(error.message);
+            }
+        }
+
+        async function deleteTemplate(templateId) {
+            hideFeedback();
+
+            if (!confirm(`确认删除模板 ${templateId} 吗？`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/templates/${templateId}`, { method: 'DELETE' });
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || '删除模板失败');
+                }
+
+                appendLog(`模板 ${templateId} 已删除`, data.message || '模板删除成功');
+                loadTemplateStatistics();
+                loadTemplateList();
+            } catch (error) {
+                showError(error.message);
+            }
+        }
+
+        async function deleteSelectedTemplates() {
+            hideFeedback();
+
+            const selected = Array.from(document.querySelectorAll('.template-select:checked'))
+                .map((checkbox) => Number(checkbox.value));
+
+            if (!selected.length) {
+                showError('请先选择要删除的模板');
+                return;
+            }
+
+            if (!confirm(`确认删除选中的 ${selected.length} 个模板吗？`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/templates/batch-delete', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ templateIds: selected })
+                });
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || '批量删除模板失败');
+                }
+
+                appendLog('批量删除模板完成', `删除数量：${data.deletedCount || 0}`);
+                loadTemplateStatistics();
+                loadTemplateList();
+            } catch (error) {
+                showError(error.message);
+            }
+        }
+
+        async function rebuildAllTemplates(onlyMissing) {
+            hideFeedback();
+
+            const button = onlyMissing
+                ? document.getElementById('rebuildMissingBtn')
+                : document.getElementById('rebuildAllBtn');
+            const originalText = button.textContent;
+            button.disabled = true;
+            button.textContent = '处理中...';
+
+            try {
+                const response = await fetch(`/templates/rebuild/all?onlyMissing=${onlyMissing}`, {
+                    method: 'POST'
+                });
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || '批量建库失败');
+                }
+
+                startTaskPolling(data.taskId, onlyMissing);
+            } catch (error) {
+                showError(error.message);
+            } finally {
+                button.disabled = false;
+                button.textContent = originalText;
+            }
+        }
+
+        async function pollTaskStatus(taskId, onlyMissing) {
+            const response = await fetch(`/templates/rebuild/tasks/${taskId}`);
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || '获取进度失败');
+            }
+
+            const title = onlyMissing ? '缺失模板补建中' : '全部模板重建中';
+            const meta = `已处理 ${data.processedCount || 0} / ${data.totalSamples || 0}，成功 ${data.successCount || 0}，跳过 ${data.skippedCount || 0}，失败 ${data.failedCount || 0}`;
+            showProgress(title, data.progressPercent || 0, meta);
+
+            if (data.finished) {
+                if (currentTaskTimer) {
+                    clearInterval(currentTaskTimer);
+                    currentTaskTimer = null;
+                }
+
+                showProgress(data.message || '批量建库完成', 100, meta);
+                appendLog(
+                    onlyMissing ? '补齐缺失模板完成' : '全部模板重建完成',
+                    `总样本：${data.totalSamples || 0}，成功：${data.successCount || 0}，跳过：${data.skippedCount || 0}，失败：${data.failedCount || 0}`
+                );
+                loadTemplateStatistics();
+                loadTemplateList();
+            }
+        }
+
+        function startTaskPolling(taskId, onlyMissing) {
+            if (currentTaskTimer) {
+                clearInterval(currentTaskTimer);
+                currentTaskTimer = null;
+            }
+
+            showProgress(
+                onlyMissing ? '缺失模板补建中' : '全部模板重建中',
+                0,
+                '正在初始化任务...'
+            );
+
+            pollTaskStatus(taskId, onlyMissing).catch((error) => showError(error.message));
+            currentTaskTimer = setInterval(() => {
+                pollTaskStatus(taskId, onlyMissing).catch((error) => {
+                    if (currentTaskTimer) {
+                        clearInterval(currentTaskTimer);
+                        currentTaskTimer = null;
+                    }
+                    showError(error.message);
+                });
+            }, 1000);
+        }
+
+        templateTableBody.addEventListener('click', (event) => {
+            const target = event.target.closest('button');
+            if (!target) {
+                return;
+            }
+
+            const action = target.dataset.action;
+            if (action === 'rebuild-sample') {
+                const sampleDbId = target.dataset.sampleId;
+                if (!sampleDbId) {
+                    showError('当前模板缺少样本信息，无法直接重建');
+                    return;
+                }
+                rebuildBySample(sampleDbId);
+            }
+
+            if (action === 'delete-template') {
+                deleteTemplate(target.dataset.templateId);
+            }
+        });
+
+        selectAllTemplates.addEventListener('change', () => {
+            document.querySelectorAll('.template-select').forEach((checkbox) => {
+                checkbox.checked = selectAllTemplates.checked;
+            });
+        });
+
+        document.getElementById('rebuildSampleBtn').addEventListener('click', () => rebuildBySample());
+        document.getElementById('rebuildVocabularyBtn').addEventListener('click', rebuildByVocabulary);
+        document.getElementById('deleteSelectedBtn').addEventListener('click', deleteSelectedTemplates);
+        document.getElementById('refreshTemplateStatsBtn').addEventListener('click', loadTemplateStatistics);
+        document.getElementById('refreshTemplateListBtn').addEventListener('click', loadTemplateList);
+        document.getElementById('rebuildAllBtn').addEventListener('click', () => rebuildAllTemplates(false));
+        document.getElementById('rebuildMissingBtn').addEventListener('click', () => rebuildAllTemplates(true));
+        document.getElementById('clearLogsBtn').addEventListener('click', () => {
+            localStorage.removeItem(LOG_STORAGE_KEY);
+            renderLogs();
+        });
+
+        renderLogs();
+        loadTemplateStatistics();
+        loadTemplateList();
+    </script>
+</body>
+</html>

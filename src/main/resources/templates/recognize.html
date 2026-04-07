@@ -12,13 +12,27 @@
             <div class="nav-brand">
                 <h1>织金苗语语音识别系统</h1>
             </div>
-            <ul class="nav-menu">
-                <li><a href="/">首页</a></li>
-                <li><a href="/recognize" class="active">语音识别</a></li>
-                <li><a href="/template-library">模板管理</a></li>
-                <li><a href="/history">历史记录</a></li>
-                <li><a href="/statistics">统计分析</a></li>
-            </ul>
+            <div class="nav-side">
+                <ul class="nav-menu">
+                    <li><a href="/">首页</a></li>
+                    <li><a href="/recognize" class="active">语音识别</a></li>
+                    <li th:if="${isAdmin}"><a href="/template-library">模板管理</a></li>
+                    <li><a href="/history">历史记录</a></li>
+                    <li><a href="/statistics">统计分析</a></li>
+                </ul>
+                <div class="nav-user-menu">
+                    <button class="nav-user-trigger" type="button">
+                        <span class="user-pill">
+                            <span th:text="${currentUser.username}">user</span>
+                            <span th:if="${isAdmin}">管理员</span>
+                        </span>
+                    </button>
+                    <div class="nav-dropdown">
+                        <a class="nav-dropdown-link" href="/profile">个人信息</a>
+                        <a class="nav-dropdown-link" href="/auth/logout">退出</a>
+                    </div>
+                </div>
+            </div>
         </div>
     </nav>
 
@@ -27,7 +41,7 @@
             <div class="page-header">
                 <div>
                     <h2>语音识别</h2>
-                    <p>上传单个音频文件。</p>
+                    <p>上传单个 WAV 音频文件进行识别。</p>
                 </div>
             </div>
 
@@ -35,16 +49,21 @@
                 <section class="upload-section">
                     <div class="upload-box" id="uploadBox">
                         <p class="upload-title">选择音频文件</p>
-                        <p class="upload-note">支持 WAV</p>
+                        <p class="upload-note">支持 WAV 格式，也可直接网页录音</p>
                         <input type="file" id="audioFile" accept=".wav,audio/wav" hidden>
+                        <div class="file-inline" id="fileInline" style="display: none;">
+                            <div class="file-inline-name" id="fileName"></div>
+                            <button class="btn btn-secondary" id="clearFileBtn" type="button">移除</button>
+                        </div>
+                        <div class="audio-preview" id="audioPreview" style="display: none;">
+                            <audio id="audioPlayer" controls preload="metadata"></audio>
+                        </div>
                         <div class="hero-actions">
                             <button class="btn btn-primary" id="selectFileBtn">选择文件</button>
+                            <button class="btn btn-secondary" id="startRecordBtn" type="button">开始录音</button>
+                            <button class="btn btn-secondary" id="stopRecordBtn" type="button" disabled>停止录音</button>
                         </div>
-                    </div>
-
-                    <div class="file-info" id="fileInfo" style="display: none;">
-                        <div class="file-name" id="fileName"></div>
-                        <button class="btn btn-secondary" id="clearFileBtn">移除</button>
+                        <p class="record-status" id="recordStatus">未开始录音</p>
                     </div>
 
                     <button class="btn btn-large btn-primary" id="recognizeBtn" disabled>开始识别</button>
@@ -62,31 +81,43 @@
 
             <div class="loading" id="loading" style="display: none;">
                 <div class="spinner"></div>
-                <p>处理中</p>
+                <p>处理中...</p>
             </div>
 
             <div class="result-section" id="resultSection" style="display: none;">
                 <div class="result-card">
                     <div class="result-item">
                         <span class="result-label">结果</span>
-                        <span class="result-value" id="resultWord"></span>
+                        <strong class="result-value" id="resultWord">-</strong>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">苗语</span>
+                        <strong class="result-value" id="resultPinyin">-</strong>
                     </div>
                     <div class="result-item">
                         <span class="result-label">声调 / 状态</span>
-                        <span class="result-value" id="resultTone"></span>
+                        <strong class="result-value" id="resultTone">-</strong>
                     </div>
                     <div class="result-item">
                         <span class="result-label">置信度</span>
-                        <span class="result-value">
+                        <div class="confidence-wrap">
+                            <strong class="result-value" id="resultConfidence">-</strong>
                             <div class="confidence-bar">
                                 <div class="confidence-fill" id="confidenceFill"></div>
                             </div>
-                            <span id="resultConfidence"></span>
-                        </span>
+                        </div>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">发音评分</span>
+                        <strong class="result-value" id="resultScore">-</strong>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">匹配距离</span>
+                        <strong class="result-value" id="resultDistance">-</strong>
                     </div>
                     <div class="result-item">
                         <span class="result-label">耗时</span>
-                        <span class="result-value"><span id="resultTime"></span> ms</span>
+                        <strong class="result-value"><span id="resultTime">-</span> ms</strong>
                     </div>
                 </div>
             </div>
@@ -107,100 +138,381 @@
         const uploadBox = document.getElementById('uploadBox');
         const audioFileInput = document.getElementById('audioFile');
         const selectFileBtn = document.getElementById('selectFileBtn');
-        const fileInfo = document.getElementById('fileInfo');
-        const fileName = document.getElementById('fileName');
         const clearFileBtn = document.getElementById('clearFileBtn');
+        const startRecordBtn = document.getElementById('startRecordBtn');
+        const stopRecordBtn = document.getElementById('stopRecordBtn');
+        const recordStatus = document.getElementById('recordStatus');
         const recognizeBtn = document.getElementById('recognizeBtn');
+        const fileInline = document.getElementById('fileInline');
+        const fileName = document.getElementById('fileName');
+        const audioPreview = document.getElementById('audioPreview');
+        const audioPlayer = document.getElementById('audioPlayer');
         const loading = document.getElementById('loading');
         const resultSection = document.getElementById('resultSection');
         const errorSection = document.getElementById('errorSection');
+        const errorMessage = document.getElementById('errorMessage');
+        let currentAudioPreviewUrl = null;
+        let audioContext = null;
+        let mediaStream = null;
+        let mediaSource = null;
+        let processorNode = null;
+        let recordedChunks = [];
+        let isRecording = false;
+
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorSection.style.display = 'block';
+        }
+
+        function hideError() {
+            errorSection.style.display = 'none';
+        }
+
+        function isValidAudioFile(file) {
+            if (!file) {
+                return false;
+            }
+
+            const lowerName = file.name.toLowerCase();
+            return lowerName.endsWith('.wav') || file.type === 'audio/wav' || file.type === 'audio/x-wav';
+        }
+
+        function setRecordState(recording, message) {
+            isRecording = recording;
+            startRecordBtn.disabled = recording;
+            stopRecordBtn.disabled = !recording;
+            recordStatus.textContent = message;
+            recordStatus.classList.toggle('recording', recording);
+        }
+
+        function mergeFloat32Arrays(chunks) {
+            const totalLength = chunks.reduce((sum, chunk) => sum + chunk.length, 0);
+            const result = new Float32Array(totalLength);
+            let offset = 0;
+
+            chunks.forEach((chunk) => {
+                result.set(chunk, offset);
+                offset += chunk.length;
+            });
+
+            return result;
+        }
+
+        function downsampleBuffer(buffer, inputSampleRate, outputSampleRate) {
+            if (outputSampleRate >= inputSampleRate) {
+                return buffer;
+            }
+
+            const ratio = inputSampleRate / outputSampleRate;
+            const newLength = Math.round(buffer.length / ratio);
+            const result = new Float32Array(newLength);
+            let offsetResult = 0;
+            let offsetBuffer = 0;
+
+            while (offsetResult < result.length) {
+                const nextOffsetBuffer = Math.round((offsetResult + 1) * ratio);
+                let accum = 0;
+                let count = 0;
+
+                for (let i = offsetBuffer; i < nextOffsetBuffer && i < buffer.length; i++) {
+                    accum += buffer[i];
+                    count++;
+                }
+
+                result[offsetResult] = count > 0 ? accum / count : 0;
+                offsetResult++;
+                offsetBuffer = nextOffsetBuffer;
+            }
+
+            return result;
+        }
+
+        function trimSilence(buffer, sampleRate) {
+            if (!buffer.length) {
+                return buffer;
+            }
+
+            const frameSize = Math.max(1, Math.floor(sampleRate * 0.02));
+            const hopSize = Math.max(1, Math.floor(sampleRate * 0.01));
+            const frameEnergies = [];
+            let maxEnergy = 0;
+
+            for (let start = 0; start < buffer.length; start += hopSize) {
+                const end = Math.min(start + frameSize, buffer.length);
+                let energy = 0;
+                for (let i = start; i < end; i++) {
+                    energy += buffer[i] * buffer[i];
+                }
+                energy = Math.sqrt(energy / Math.max(1, end - start));
+                frameEnergies.push({ start, end, energy });
+                maxEnergy = Math.max(maxEnergy, energy);
+            }
+
+            if (maxEnergy === 0) {
+                return buffer;
+            }
+
+            const threshold = maxEnergy * 0.08;
+            let startIndex = 0;
+            let endIndex = buffer.length - 1;
+
+            for (const frame of frameEnergies) {
+                if (frame.energy >= threshold) {
+                    startIndex = frame.start;
+                    break;
+                }
+            }
+
+            for (let i = frameEnergies.length - 1; i >= 0; i--) {
+                if (frameEnergies[i].energy >= threshold) {
+                    endIndex = frameEnergies[i].end - 1;
+                    break;
+                }
+            }
+
+            const padding = Math.floor(sampleRate * 0.08);
+            startIndex = Math.max(0, startIndex - padding);
+            endIndex = Math.min(buffer.length - 1, endIndex + padding);
+
+            if (endIndex <= startIndex) {
+                return buffer;
+            }
+
+            return buffer.slice(startIndex, endIndex + 1);
+        }
+
+        function encodeWav(samples, sampleRate) {
+            const buffer = new ArrayBuffer(44 + samples.length * 2);
+            const view = new DataView(buffer);
+
+            function writeString(offset, string) {
+                for (let i = 0; i < string.length; i++) {
+                    view.setUint8(offset + i, string.charCodeAt(i));
+                }
+            }
+
+            writeString(0, 'RIFF');
+            view.setUint32(4, 36 + samples.length * 2, true);
+            writeString(8, 'WAVE');
+            writeString(12, 'fmt ');
+            view.setUint32(16, 16, true);
+            view.setUint16(20, 1, true);
+            view.setUint16(22, 1, true);
+            view.setUint32(24, sampleRate, true);
+            view.setUint32(28, sampleRate * 2, true);
+            view.setUint16(32, 2, true);
+            view.setUint16(34, 16, true);
+            writeString(36, 'data');
+            view.setUint32(40, samples.length * 2, true);
+
+            let offset = 44;
+            for (let i = 0; i < samples.length; i++, offset += 2) {
+                const sample = Math.max(-1, Math.min(1, samples[i]));
+                view.setInt16(offset, sample < 0 ? sample * 0x8000 : sample * 0x7FFF, true);
+            }
+
+            return new Blob([view], { type: 'audio/wav' });
+        }
+
+        async function startRecording() {
+            hideError();
+
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                showError('当前浏览器不支持网页录音');
+                return;
+            }
+
+            try {
+                mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                mediaSource = audioContext.createMediaStreamSource(mediaStream);
+                processorNode = audioContext.createScriptProcessor(4096, 1, 1);
+                recordedChunks = [];
+
+                processorNode.onaudioprocess = (event) => {
+                    if (!isRecording) {
+                        return;
+                    }
+                    const channelData = event.inputBuffer.getChannelData(0);
+                    recordedChunks.push(new Float32Array(channelData));
+                };
+
+                mediaSource.connect(processorNode);
+                processorNode.connect(audioContext.destination);
+                setRecordState(true, '录音中...');
+            } catch (error) {
+                showError('无法开始录音，请检查麦克风权限');
+                setRecordState(false, '录音未开始');
+            }
+        }
+
+        async function stopRecording() {
+            if (!isRecording) {
+                return;
+            }
+
+            setRecordState(false, '正在生成录音文件...');
+
+            try {
+                if (processorNode) {
+                    processorNode.disconnect();
+                }
+                if (mediaSource) {
+                    mediaSource.disconnect();
+                }
+                if (mediaStream) {
+                    mediaStream.getTracks().forEach((track) => track.stop());
+                }
+
+                const mergedBuffer = mergeFloat32Arrays(recordedChunks);
+                const wavSampleRate = 16000;
+                const trimmedBuffer = trimSilence(mergedBuffer, audioContext.sampleRate);
+                const outputBuffer = downsampleBuffer(trimmedBuffer, audioContext.sampleRate, wavSampleRate);
+                const wavBlob = encodeWav(outputBuffer, wavSampleRate);
+                const wavFile = new File([wavBlob], `recorded_${Date.now()}.wav`, { type: 'audio/wav' });
+                updateSelectedFile(wavFile);
+                setRecordState(false, '录音完成，已自动裁剪首尾静音');
+            } catch (error) {
+                showError('录音处理失败，请重试');
+                setRecordState(false, '录音失败');
+            } finally {
+                if (audioContext) {
+                    await audioContext.close();
+                }
+                audioContext = null;
+                mediaStream = null;
+                mediaSource = null;
+                processorNode = null;
+            }
+        }
+
+        function updateSelectedFile(file) {
+            if (!file) {
+                audioFileInput.value = '';
+                fileInline.style.display = 'none';
+                audioPreview.style.display = 'none';
+                if (currentAudioPreviewUrl) {
+                    URL.revokeObjectURL(currentAudioPreviewUrl);
+                    currentAudioPreviewUrl = null;
+                }
+                audioPlayer.removeAttribute('src');
+                audioPlayer.load();
+                recognizeBtn.disabled = true;
+                return;
+            }
+
+            if (!isValidAudioFile(file)) {
+                showError('请选择 WAV 音频文件');
+                return;
+            }
+
+            const transfer = new DataTransfer();
+            transfer.items.add(file);
+            audioFileInput.files = transfer.files;
+
+            fileName.textContent = file.name;
+            fileInline.style.display = 'flex';
+            if (currentAudioPreviewUrl) {
+                URL.revokeObjectURL(currentAudioPreviewUrl);
+            }
+            currentAudioPreviewUrl = URL.createObjectURL(file);
+            audioPlayer.src = currentAudioPreviewUrl;
+            audioPreview.style.display = 'block';
+            recognizeBtn.disabled = false;
+            hideError();
+        }
 
         selectFileBtn.addEventListener('click', () => audioFileInput.click());
 
-        audioFileInput.addEventListener('change', (e) => {
-            if (e.target.files.length > 0) {
-                const file = e.target.files[0];
-                fileName.textContent = file.name;
-                fileInfo.style.display = 'flex';
-                uploadBox.style.display = 'none';
-                recognizeBtn.disabled = false;
-            }
+        audioFileInput.addEventListener('change', () => {
+            updateSelectedFile(audioFileInput.files[0]);
         });
 
         clearFileBtn.addEventListener('click', () => {
             audioFileInput.value = '';
-            fileInfo.style.display = 'none';
-            uploadBox.style.display = 'block';
+            fileInline.style.display = 'none';
             recognizeBtn.disabled = true;
             resultSection.style.display = 'none';
-            errorSection.style.display = 'none';
+            hideError();
         });
 
-        uploadBox.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            uploadBox.classList.add('dragover');
+        startRecordBtn.addEventListener('click', startRecording);
+        stopRecordBtn.addEventListener('click', stopRecording);
+
+        ['dragenter', 'dragover'].forEach((eventName) => {
+            uploadBox.addEventListener(eventName, (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                uploadBox.classList.add('dragover');
+            });
         });
 
-        uploadBox.addEventListener('dragleave', () => {
+        ['dragleave', 'dragend'].forEach((eventName) => {
+            uploadBox.addEventListener(eventName, (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                uploadBox.classList.remove('dragover');
+            });
+        });
+
+        uploadBox.addEventListener('drop', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
             uploadBox.classList.remove('dragover');
-        });
 
-        uploadBox.addEventListener('drop', (e) => {
-            e.preventDefault();
-            uploadBox.classList.remove('dragover');
-            if (e.dataTransfer.files.length > 0) {
-                audioFileInput.files = e.dataTransfer.files;
-                const file = e.dataTransfer.files[0];
-                fileName.textContent = file.name;
-                fileInfo.style.display = 'flex';
-                uploadBox.style.display = 'none';
-                recognizeBtn.disabled = false;
+            const droppedFile = event.dataTransfer?.files?.[0];
+            if (!droppedFile) {
+                return;
             }
+
+            updateSelectedFile(droppedFile);
         });
 
         recognizeBtn.addEventListener('click', async () => {
-            if (audioFileInput.files.length === 0) return;
+            const file = audioFileInput.files[0];
+            if (!file) {
+                showError('请先选择音频文件');
+                return;
+            }
 
-            const formData = new FormData();
-            formData.append('audio', audioFileInput.files[0]);
-
-            loading.style.display = 'block';
+            hideError();
             resultSection.style.display = 'none';
-            errorSection.style.display = 'none';
+            loading.style.display = 'block';
             recognizeBtn.disabled = true;
 
             try {
+                const formData = new FormData();
+                formData.append('audio', file);
+
                 const response = await fetch('/recognition/recognize', {
                     method: 'POST',
                     body: formData
                 });
 
                 const data = await response.json();
-                loading.style.display = 'none';
-
-                if (response.ok && data.success) {
-                    document.getElementById('resultWord').textContent = data.wordText || data.wordId || '未识别';
-                    document.getElementById('resultTone').textContent = data.rejected ? (data.rejectionReason || '拒识') : (data.tone || '-');
-                    document.getElementById('resultConfidence').textContent = (data.confidence * 100).toFixed(1) + '%';
-                    document.getElementById('confidenceFill').style.width = (data.confidence * 100) + '%';
-                    document.getElementById('resultTime').textContent = data.processingTimeMs;
-                    resultSection.style.display = 'block';
-                } else {
-                    showError(data.error || '识别失败');
+                if (!response.ok) {
+                    throw new Error(data.error || '识别失败');
                 }
+
+                const confidence = data.confidence || 0;
+                const pronunciationScore = Math.round(confidence * 100);
+
+                document.getElementById('resultWord').textContent = data.wordText || '-';
+                document.getElementById('resultPinyin').textContent = data.pinyin || '-';
+                document.getElementById('resultTone').textContent = data.rejected ? (data.rejectionReason || '拒识') : (data.tone || '-');
+                document.getElementById('resultConfidence').textContent = (confidence * 100).toFixed(1) + '%';
+                document.getElementById('confidenceFill').style.width = (confidence * 100) + '%';
+                document.getElementById('resultScore').textContent = pronunciationScore + ' 分';
+                document.getElementById('resultDistance').textContent = data.distance != null ? data.distance.toFixed(4) : '-';
+                document.getElementById('resultTime').textContent = data.processingTimeMs ?? '-';
+                resultSection.style.display = 'block';
             } catch (error) {
+                showError(error.message);
+            } finally {
                 loading.style.display = 'none';
-                showError('网络错误: ' + error.message);
+                recognizeBtn.disabled = false;
             }
-
-            recognizeBtn.disabled = false;
         });
-
-        function showError(message) {
-            document.getElementById('errorMessage').textContent = message;
-            errorSection.style.display = 'block';
-            recognizeBtn.disabled = false;
-        }
     </script>
 </body>
 </html>

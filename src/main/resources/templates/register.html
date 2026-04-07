@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>注册 - 织金苗语语音识别系统</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <main class="login-page">
+        <section class="login-shell">
+            <div class="login-brand">织金苗语语音识别系统</div>
+            <h1 class="login-title">注册账号</h1>
+            <p class="login-subtitle">注册后可进入识别系统，模板管理功能仅管理员可用。</p>
+
+            <div class="error-section" th:if="${error}">
+                <div class="error-message" th:text="${error}"></div>
+            </div>
+
+            <form class="login-form" th:action="@{/auth/register}" method="post">
+                <div class="field-group">
+                    <label class="field-label" for="username">用户名</label>
+                    <input class="field-input" id="username" name="username" type="text" autocomplete="username" required>
+                </div>
+
+                <div class="field-group">
+                    <label class="field-label" for="email">邮箱</label>
+                    <input class="field-input" id="email" name="email" type="email" autocomplete="email">
+                </div>
+
+                <div class="field-group">
+                    <label class="field-label" for="password">密码</label>
+                    <input class="field-input" id="password" name="password" type="password" autocomplete="new-password" required>
+                    <p class="field-hint" id="passwordHint">密码长度至少 6 位</p>
+                </div>
+
+                <div class="field-group">
+                    <label class="field-label" for="confirmPassword">确认密码</label>
+                    <input class="field-input" id="confirmPassword" name="confirmPassword" type="password" autocomplete="new-password" required>
+                    <p class="field-hint" id="confirmHint"></p>
+                </div>
+
+                <button class="btn btn-primary btn-large" id="registerBtn" type="submit">注册并进入系统</button>
+            </form>
+
+            <div class="login-links">
+                <a href="/login">返回登录</a>
+            </div>
+        </section>
+    </main>
+    <script>
+        const passwordInput = document.getElementById('password');
+        const confirmInput = document.getElementById('confirmPassword');
+        const passwordHint = document.getElementById('passwordHint');
+        const confirmHint = document.getElementById('confirmHint');
+        const registerBtn = document.getElementById('registerBtn');
+
+        function updateRegisterValidation() {
+            const password = passwordInput.value;
+            const confirmPassword = confirmInput.value;
+            const passwordValid = password.length >= 6;
+            const confirmValid = !confirmPassword || password === confirmPassword;
+
+            passwordHint.textContent = passwordValid || password.length === 0
+                ? '密码长度至少 6 位'
+                : '密码长度不能少于 6 位';
+            passwordHint.classList.toggle('field-hint-error', !passwordValid && password.length > 0);
+
+            if (confirmPassword.length === 0) {
+                confirmHint.textContent = '';
+                confirmHint.classList.remove('field-hint-error');
+            } else if (confirmValid) {
+                confirmHint.textContent = '两次密码输入一致';
+                confirmHint.classList.remove('field-hint-error');
+            } else {
+                confirmHint.textContent = '两次输入的密码不一致';
+                confirmHint.classList.add('field-hint-error');
+            }
+
+            registerBtn.disabled = !passwordValid || !confirmValid;
+        }
+
+        passwordInput.addEventListener('input', updateRegisterValidation);
+        confirmInput.addEventListener('input', updateRegisterValidation);
+        updateRegisterValidation();
+
+        if (window.location.search.includes('error=')) {
+            history.replaceState({}, document.title, window.location.pathname);
+        }
+    </script>
+</body>
+</html>

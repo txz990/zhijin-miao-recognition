@@ -22,6 +22,10 @@ public class User {
     @Column(name = "password", nullable = false)
     private String password;
 
+    @Column(name = "role", nullable = false, length = 20)
+    @Builder.Default
+    private String role = "USER";
+
     @Column(name = "email", length = 100)
     private String email;
 

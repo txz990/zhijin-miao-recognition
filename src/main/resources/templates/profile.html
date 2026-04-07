@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>个人信息 - 织金苗语语音识别系统</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <h1>织金苗语语音识别系统</h1>
+            </div>
+            <div class="nav-side">
+                <ul class="nav-menu">
+                    <li><a href="/">首页</a></li>
+                    <li><a href="/recognize">语音识别</a></li>
+                    <li th:if="${isAdmin}"><a href="/template-library">模板管理</a></li>
+                    <li><a href="/history">历史记录</a></li>
+                    <li><a href="/statistics">统计分析</a></li>
+                </ul>
+                <div class="nav-user-menu">
+                    <button class="nav-user-trigger" type="button">
+                        <span class="user-pill">
+                            <span th:text="${currentUser.username}">user</span>
+                            <span th:if="${isAdmin}">管理员</span>
+                        </span>
+                    </button>
+                    <div class="nav-dropdown">
+                        <a class="nav-dropdown-link active" href="/profile">个人信息</a>
+                        <a class="nav-dropdown-link" href="/auth/logout">退出</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <div class="container">
+            <div class="page-header">
+                <div>
+                    <h2>个人信息</h2>
+                    <p>可以修改邮箱和登录密码。</p>
+                </div>
+            </div>
+
+            <section class="profile-shell panel">
+                <div class="success-box" th:if="${success}" th:text="${success}"></div>
+                <div class="error-section" th:if="${error}">
+                    <div class="error-message" th:text="${error}"></div>
+                </div>
+
+                <form class="login-form" th:action="@{/profile/update}" method="post">
+                    <div class="field-group">
+                        <label class="field-label">用户名</label>
+                        <input class="field-input" type="text" th:value="${profileUser.username}" readonly>
+                    </div>
+
+                    <div class="field-group">
+                        <label class="field-label" for="email">邮箱</label>
+                        <input class="field-input" id="email" name="email" type="email" th:value="${profileUser.email}">
+                    </div>
+
+                    <div class="field-group">
+                        <label class="field-label" for="newPassword">新密码</label>
+                        <input class="field-input" id="newPassword" name="newPassword" type="password" autocomplete="new-password">
+                    </div>
+
+                    <div class="field-group">
+                        <label class="field-label" for="confirmPassword">确认新密码</label>
+                        <input class="field-input" id="confirmPassword" name="confirmPassword" type="password" autocomplete="new-password">
+                    </div>
+
+                    <div class="stack-actions">
+                        <button class="btn btn-primary" type="submit">保存修改</button>
+                        <a class="btn btn-secondary" href="/">返回首页</a>
+                    </div>
+                </form>
+            </section>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>基于DTW模板匹配的织金苗语小词表语音识别系统 | 西南民族大学</p>
+        </div>
+    </footer>
+</body>
+</html>

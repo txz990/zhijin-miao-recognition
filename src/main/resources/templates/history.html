@@ -12,13 +12,27 @@
             <div class="nav-brand">
                 <h1>织金苗语语音识别系统</h1>
             </div>
-            <ul class="nav-menu">
-                <li><a href="/">首页</a></li>
-                <li><a href="/recognize">语音识别</a></li>
-                <li><a href="/template-library">模板管理</a></li>
-                <li><a href="/history" class="active">历史记录</a></li>
-                <li><a href="/statistics">统计分析</a></li>
-            </ul>
+            <div class="nav-side">
+                <ul class="nav-menu">
+                    <li><a href="/">首页</a></li>
+                    <li><a href="/recognize">语音识别</a></li>
+                    <li th:if="${isAdmin}"><a href="/template-library">模板管理</a></li>
+                    <li><a href="/history" class="active">历史记录</a></li>
+                    <li><a href="/statistics">统计分析</a></li>
+                </ul>
+                <div class="nav-user-menu">
+                    <button class="nav-user-trigger" type="button">
+                        <span class="user-pill">
+                            <span th:text="${currentUser.username}">user</span>
+                            <span th:if="${isAdmin}">管理员</span>
+                        </span>
+                    </button>
+                    <div class="nav-dropdown">
+                        <a class="nav-dropdown-link" href="/profile">个人信息</a>
+                        <a class="nav-dropdown-link" href="/auth/logout">退出</a>
+                    </div>
+                </div>
+            </div>
         </div>
     </nav>
 
@@ -27,7 +41,7 @@
             <div class="page-header">
                 <div>
                     <h2>历史记录</h2>
-                    <p>最近 100 条记录。</p>
+                    <p>显示最近 100 条识别记录。</p>
                 </div>
                 <button class="btn btn-primary" id="refreshBtn">刷新</button>
             </div>
@@ -45,9 +59,7 @@
                         </tr>
                     </thead>
                     <tbody id="historyBody">
-                        <tr>
-                            <td colspan="6" class="loading-cell">加载中...</td>
-                        </tr>
+                        <tr><td colspan="6" class="loading-cell">加载中...</td></tr>
                     </tbody>
                 </table>
             </section>
@@ -68,8 +80,10 @@
         async function loadHistory() {
             const historyBody = document.getElementById('historyBody');
             const errorSection = document.getElementById('errorSection');
-            errorSection.style.display = 'none';
+            const errorMessage = document.getElementById('errorMessage');
+
             historyBody.innerHTML = '<tr><td colspan="6" class="loading-cell">加载中...</td></tr>';
+            errorSection.style.display = 'none';
 
             try {
                 const response = await fetch('/recognition/history');
@@ -79,7 +93,7 @@
                     throw new Error(data.error || '加载失败');
                 }
 
-                if (!Array.isArray(data) || data.length === 0) {
+                if (!data.length) {
                     historyBody.innerHTML = '<tr><td colspan="6" class="loading-cell">暂无记录</td></tr>';
                     return;
                 }
@@ -87,7 +101,7 @@
                 historyBody.innerHTML = data.map(item => `
                     <tr>
                         <td>${item.createdAt || '-'}</td>
-                        <td><span class="result-badge">${item.wordText || item.wordId || '未识别'}</span></td>
+                        <td>${item.wordText || '-'}</td>
                         <td><span class="confidence-badge">${item.confidence != null ? (item.confidence * 100).toFixed(1) + '%' : '-'}</span></td>
                         <td>${item.distance != null ? item.distance.toFixed(4) : '-'}</td>
                         <td>${item.processingTimeMs != null ? item.processingTimeMs + ' ms' : '-'}</td>
@@ -96,7 +110,7 @@
                 `).join('');
             } catch (error) {
                 historyBody.innerHTML = '<tr><td colspan="6" class="loading-cell">加载失败</td></tr>';
-                document.getElementById('errorMessage').textContent = '历史记录加载失败: ' + error.message;
+                errorMessage.textContent = error.message;
                 errorSection.style.display = 'block';
             }
         }
